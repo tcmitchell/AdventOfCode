@@ -247,6 +247,24 @@ def test_world_state():
     # The fourth floor contains nothing relevant.
     return ws
 
+def real_world_state():
+    ws = WorldState(4)
+    # The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
+    ws.floors[0].extend([Microchip(Element.Strontium),
+                         Generator(Element.Strontium),
+                         Microchip(Element.Plutonium),
+                         Generator(Element.Plutonium)])
+    # The second floor contains a hydrogen generator.
+    ws.floors[1].extend([Generator(Element.Thulium),
+                         Microchip(Element.Ruthenium),
+                         Generator(Element.Ruthenium),
+                         Microchip(Element.Curium),
+                         Generator(Element.Curium)])
+    # The third floor contains a lithium generator.
+    ws.floors[2].extend([Microchip(Element.Thulium)])
+    # The fourth floor contains nothing relevant.
+    return ws
+
 def test_a_bit(ws1):
     ws2 = copy.deepcopy(ws1)
     if ws1 != ws2:
@@ -269,13 +287,14 @@ def main():
     all_states = []
     next_states = []
     # Construct the initial world state
-    world_state = test_world_state()
+    # world_state = test_world_state()
+    world_state = real_world_state()
     # test_a_bit(world_state)
     all_states.append(world_state)
     next_states.append(world_state)
     while next_states:
-        print 'Working with state:'
         state = next_states.pop(0)
+        print 'Working with gen %d state:' % (state.generation)
         print state
         for move in state.next_moves():
             # print 'Examining Move', move
