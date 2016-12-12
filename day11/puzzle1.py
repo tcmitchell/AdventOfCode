@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import sys
 
 class Type(object):
@@ -34,6 +35,15 @@ class Microchip(object):
     def __deepcopy__(self, memo):
         return self
 
+    def __str__(self):
+        return self.material.short_name + 'M'
+
+    def __repr__(self):
+        return '#<Microchip ' + self.material.element + '>'
+
+    def is_compatible(self, other):
+        return (self.type == other.type or self.material == other.material)
+
 
 class Generator(object):
 
@@ -44,6 +54,15 @@ class Generator(object):
     def __deepcopy__(self, memo):
         return self
 
+    def __str__(self):
+        return self.material.short_name + 'G'
+
+    def __repr__(self):
+        return '#<Generator ' + self.material.element + '>'
+
+    def is_compatible(self, other):
+        return (self.type == other.type or self.material == other.material)
+
 
 class Floor(object):
 
@@ -51,24 +70,138 @@ class Floor(object):
         self.number = i
         self.items = []
 
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        if isinstance(other, self.__class__):
+            return (self.number == other.number and
+                    sorted(self.items) == sorted(other.items))
+        return NotImplemented
+
+    def __ne__(self, other):
+        """Define a non-equality test"""
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        """Override the default hash behavior (that returns the id or the object)"""
+        return hash(tuple(self.number, sorted(self.items())))
+
     def is_legal(self):
         "Determines if the items on the floor are legal together"
-        pass
+        if len(self.items) < 2:
+            # Zero or one items are fine
+            return True
+        tmp_items = list(self.items)
+        while tmp_items:
+            item = tmp_items.pop()
+            for i in tmp_items:
+                if not item.is_compatible(i):
+                    print 'Incompatible: ', item, i
+                    return False
+        return True
 
     def extend(self, thing):
         self.items.extend(thing)
+
+    def remove_items(self, items):
+        for i in items:
+            if i in self.items:
+                self.items.remove(i)
+            else:
+                msg = 'Floor.remove_items item %r is not in %r'
+                raise Exception(msg % (i, self.items))
+
+    def add_items(self, items):
+        self.items.extend(items)
+
+
+class Move(object):
+
+    def __init__(self, old_floor, new_floor, items):
+        self.old_floor = old_floor
+        self.new_floor = new_floor
+        self.items = items
 
 
 class WorldState(object):
 
     def __init__(self, numFloors):
         self.floors = [Floor(i) for i in range(numFloors)]
-        self.children = []
         self.elevator = 0
+        self.generation = 0
+
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        if isinstance(other, self.__class__):
+            return (self.elevator == other.elevator and
+                    self.floors == other.floors)
+        return NotImplemented
+
+    def __ne__(self, other):
+        """Define a non-equality test"""
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        """Override the default hash behavior (that returns the id or the object)"""
+        return hash(tuple(self.elevator, self.floors))
 
     def is_legal(self):
         "This world state is legal if all the floors in the state are legal"
         return not [f.is_legal() for f in self.floors].count(False)
+
+    def next_floors(self):
+        "Where can the elevator move next?"
+        return [x for x in [self.elevator+1, self.elevator-1]
+                    if x in range(len(self.floors))]
+
+    def next_items(self):
+        """What items can move next?
+
+        One or two items fit on the elevator. If two they must be compatible
+        either by type or by material.
+        """
+        items = list(self.floors[self.elevator].items)
+        print items
+        # Each thing can travel alone
+        result = [[i] for i in items]
+        # What combinations can travel together?
+        while items:
+            item = items.pop()
+            for i in items:
+                print 'Comparing item', str(item), 'and', str(i)
+                if item.is_compatible(i):
+                    'Adding items'
+                    result.insert(0, [item, i])
+        return result
+
+    def next_moves(self):
+        result = []
+        floors = self.next_floors()
+        items = self.next_items()
+        for f in floors:
+            for i in items:
+                result.append(Move(self.elevator, f, i))
+        return result
+
+    def apply_move(self, move):
+        self.floors[move.old_floor].remove_items(move.items)
+        self.floors[move.new_floor].add_items(move.items)
+        self.elevator = move.new_floor
+
+    def is_complete(self):
+        return not self.floors[0] and not self.floors[1] and not self.floors[2]
+
+    def __str__(self):
+        out = ''
+        for i in range(len(self.floors)):
+            out += 'F%d ' % (i+1)
+            for item in self.floors[i].items:
+                out += str(item) + ' '
+            out += '\n'
+        return out
 
 
 def test_world_state():
@@ -82,10 +215,55 @@ def test_world_state():
     # The fourth floor contains nothing relevant.
     return ws
 
+def test_a_bit(ws1):
+    ws2 = copy.deepcopy(ws1)
+    if ws1 != ws2:
+        raise Exception('equality is not working')
+    else:
+        print 'deep copy looks good'
+    ws2.elevator = ws2.elevator + 1
+    if ws1 == ws2:
+        raise Exception('equality is not working')
+    else:
+        print 'inequality looks good'
+    print 'Next floors ', ws1.elevator, '=', ws1.next_floors()
+    print 'Next floors ', ws2.elevator, '=', ws2.next_floors()
+    print 'Next items 1', ws1.next_items()
+    print 'Next items 2', ws2.next_items()
+    print 'Next moves 1', ws1.next_moves()
+    print 'Next moves 2', ws2.next_moves()
 
 def main():
+    all_states = []
+    next_states = []
     # Construct the initial world state
     world_state = test_world_state()
+    # test_a_bit(world_state)
+    all_states.append(world_state)
+    next_states.append(world_state)
+    while next_states:
+        print 'Popping a new state'
+        state = next_states.pop()
+        print state
+        for move in state.next_moves():
+            print 'Examining Move', move
+            ws_prime = copy.deepcopy(state)
+            ws_prime.apply_move(move)
+            if ws_prime in all_states:
+                print 'Already been here'
+                continue
+            if not ws_prime.is_legal():
+                print 'Not legal'
+                print ws_prime
+                continue
+            if ws_prime.is_complete():
+                raise Exception('Puzzle complete!')
+            print 'Adding state'
+            print state
+            all_states.append(ws_prime)
+            next_states.append(ws_prime)
+    print 'No more states to explore'
+
     #
     # Generate a set of possible moves from this state.
     # For each 1 or 2 items that can move from the current floor
