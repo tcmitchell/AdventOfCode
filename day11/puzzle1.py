@@ -60,6 +60,22 @@ class Generator(object):
     def __repr__(self):
         return '#<Generator ' + self.material.element + '>'
 
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        if isinstance(other, self.__class__):
+            return (self.material.element == other.material.element)
+        return NotImplemented
+
+    def __ne__(self, other):
+        """Define a non-equality test"""
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        """Override the default hash behavior (that returns the id or the object)"""
+        return hash(self.material.element)
+
     def is_compatible(self, other):
         return (self.type == other.type or self.material == other.material)
 
@@ -89,16 +105,26 @@ class Floor(object):
 
     def is_legal(self):
         "Determines if the items on the floor are legal together"
+        #
+        # Need to handle the case where a microchip is attached
+        # to its generator
+        #
         if len(self.items) < 2:
             # Zero or one items are fine
             return True
-        tmp_items = list(self.items)
-        while tmp_items:
-            item = tmp_items.pop()
-            for i in tmp_items:
-                if not item.is_compatible(i):
-                    print 'Incompatible: ', item, i
-                    return False
+        microchips = [x for x in self.items if x.type == Type.Microchip]
+        generators = [x for x in self.items if x.type == Type.Generator]
+        if not microchips or not generators:
+            # All one kind or the other is fine
+            return True
+        #
+        # We've got some microchips and some generators.
+        # Each microchip has to have a matching generator for this
+        #   floor to be legal
+        for m in microchips:
+            if Generator(m.material) not in generators:
+                return False
+        # No mismatched microchips, so legal
         return True
 
     def extend(self, thing):
@@ -114,6 +140,9 @@ class Floor(object):
 
     def add_items(self, items):
         self.items.extend(items)
+
+    def is_empty(self):
+        return len(self.items) == 0
 
 
 class Move(object):
@@ -164,16 +193,13 @@ class WorldState(object):
         either by type or by material.
         """
         items = list(self.floors[self.elevator].items)
-        print items
         # Each thing can travel alone
         result = [[i] for i in items]
         # What combinations can travel together?
         while items:
             item = items.pop()
             for i in items:
-                print 'Comparing item', str(item), 'and', str(i)
                 if item.is_compatible(i):
-                    'Adding items'
                     result.insert(0, [item, i])
         return result
 
@@ -192,12 +218,18 @@ class WorldState(object):
         self.elevator = move.new_floor
 
     def is_complete(self):
-        return not self.floors[0] and not self.floors[1] and not self.floors[2]
+        return (self.floors[0].is_empty() and
+                self.floors[1].is_empty() and
+                self.floors[2].is_empty())
 
     def __str__(self):
         out = ''
-        for i in range(len(self.floors)):
+        for i in reversed(range(len(self.floors))):
             out += 'F%d ' % (i+1)
+            if self.elevator == i:
+                out += ' E '
+            else:
+                out += '   '
             for item in self.floors[i].items:
                 out += str(item) + ' '
             out += '\n'
@@ -242,24 +274,25 @@ def main():
     all_states.append(world_state)
     next_states.append(world_state)
     while next_states:
-        print 'Popping a new state'
-        state = next_states.pop()
+        print 'Working with state:'
+        state = next_states.pop(0)
         print state
         for move in state.next_moves():
-            print 'Examining Move', move
+            # print 'Examining Move', move
             ws_prime = copy.deepcopy(state)
             ws_prime.apply_move(move)
+            ws_prime.generation = state.generation + 1
             if ws_prime in all_states:
                 print 'Already been here'
                 continue
             if not ws_prime.is_legal():
                 print 'Not legal'
-                print ws_prime
+                all_states.append(ws_prime)
                 continue
             if ws_prime.is_complete():
-                raise Exception('Puzzle complete!')
+                raise Exception('Puzzle complete, generation %d' % (ws_prime.generation))
             print 'Adding state'
-            print state
+            # print state
             all_states.append(ws_prime)
             next_states.append(ws_prime)
     print 'No more states to explore'
