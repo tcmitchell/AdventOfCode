@@ -33,10 +33,10 @@ def main(argv=None):
                 return gen+1
             frontier.append((next_x, next_y, gen+1))
 
-# 263 is too high (gen 50)
-# 261 is too high (gen 49)
+# 263 is too high (gen 50) - duplicates in visited, illegal moves in visited
+# 261 is too high (gen 49) - duplicates in visited, illegal moves in visited
 # 118 is too low (don't put illegal moves in visited set)
-# 119 is too low (tried to generation 51)
+# 119 is too low (tried to generation 51) - wasn't exploring zeroes
 # 135 is correct: is_legal wasn't allowing zero coordinates, which are
 #                 legal. Changed from x > 0 to x >= 0
 
