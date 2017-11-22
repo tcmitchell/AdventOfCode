@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import re
 import sys
+
 
 class Screen(object):
 
@@ -10,7 +11,7 @@ class Screen(object):
         self.height = height
         self.pixels = []
         for y in range(self.height):
-            self.pixels.append([' ']*self.width)
+            self.pixels.append([' '] * self.width)
 
     def rect(self, width, height):
         for x in range(width):
@@ -46,28 +47,33 @@ class Screen(object):
             count += self.pixels[y].count('#')
         return count
 
+
 def do_rect(screen, w, h):
     w = int(w)
     h = int(h)
-    print 'do_rect(%d, %d)' % (w, h)
+    print('do_rect(%d, %d)' % (w, h))
     screen.rect(w, h)
+
 
 def do_rotate_row(screen, r, num):
     r = int(r)
     num = int(num)
-    print 'do_rotate_row(%d, %d)' % (r, num)
+    print('do_rotate_row(%d, %d)' % (r, num))
     screen.rotate_row(r, num)
+
 
 def do_rotate_column(screen, c, num):
     c = int(c)
     num = int(num)
-    print 'do_rotate_column(%d, %d)' % (c, num)
+    print('do_rotate_column(%d, %d)' % (c, num))
     screen.rotate_column(c, num)
+
 
 def get_command_parsers():
     return [(re.compile(r'rect (\d+)x(\d+)'), do_rect),
             (re.compile(r'rotate row y=(\d+) by (\d+)'), do_rotate_row),
             (re.compile(r'rotate column x=(\d+) by (\d+)'), do_rotate_column)]
+
 
 def do_command(screen, cmd, parsers):
     for (regex, func) in parsers:
@@ -76,21 +82,24 @@ def do_command(screen, cmd, parsers):
             return func(screen, m.group(1), m.group(2))
     raise Exception("Unknown command: " + cmd)
 
+
 def load_commands(screen, datafile):
     parsers = get_command_parsers()
     with open(datafile, 'rb') as f:
         for line in f:
-            line = line.strip()
+            line = line.strip().decode('utf-8')
             do_command(screen, line, parsers)
-            print screen
+            print(screen)
             print
+
 
 def main(argv):
     datafile = argv[1]
     screen = Screen(50, 6)
-    print screen
+    print(screen)
     load_commands(screen, datafile)
-    print 'On pixels: ', screen.count_on_pixels()
+    print('On pixels: ', screen.count_on_pixels())
+
 
 if __name__ == '__main__':
     main(sys.argv)
