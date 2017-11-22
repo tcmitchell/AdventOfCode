@@ -1,16 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
+
 def load_program(filename):
     with open(filename, 'rb') as f:
-        return [l.strip().split() for l in f.readlines()]
+        return [l.strip().decode('utf-8').split() for l in f.readlines()]
+
 
 def get_value(item, registers):
     if item in registers:
         return registers[item]
     else:
         return int(item)
+
 
 def toggle(prog, pc, registers):
     # print 'toggle:', prog[pc]
@@ -31,9 +34,10 @@ def toggle(prog, pc, registers):
         else:
             target[0] = 'jnz'
 
+
 def execute(prog, pc, registers):
     cmd = prog[pc]
-    # print 'Executing', pc, ':', cmd, registers
+    # print('Executing', pc, ':', cmd, registers)
     inst = cmd[0]
     if inst == 'cpy':
         x = cmd[1]
@@ -58,20 +62,22 @@ def execute(prog, pc, registers):
             outval = registers[x]
         else:
             outval = int(x)
-        # print "Out: %r (%r)" % (outval, str(unichr(outval)))
-        sys.stdout.write(str(unichr(outval)))
+        # print("Out: %r (%r)" % (outval, str(chr(outval))))
+        sys.stdout.write(str(chr(outval)))
     return pc + 1
+
 
 def main(argv=None):
     if not argv:
         argv = sys.argv
     prog = load_program(argv[1])
-    # print prog
-    registers = {'a':12, 'b':0, 'c':0, 'd':0}
+    # print(prog)
+    registers = {'a': 12, 'b': 0, 'c': 0, 'd': 0}
     pc = 0
     while pc < len(prog):
         pc = execute(prog, pc, registers)
-    # print registers
+    # print(registers)
+
 
 if __name__ == '__main__':
     main()
