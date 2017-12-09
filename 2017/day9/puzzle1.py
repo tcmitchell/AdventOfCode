@@ -34,11 +34,30 @@ def filter_garbage(in_data):
     return ''.join(out)
 
 
+def score(group_data):
+    total = 0
+    gscore = 0
+    for c in group_data:
+        if c == '{':
+            gscore += 1
+        elif c == '}':
+            total += gscore
+            gscore -= 1
+        elif c == ',':
+            pass
+        else:
+            raise Exception('Unknown character in group data: %r' % (c))
+    print('Final gscore = %d' % (gscore))
+    return total
+
+
 def main(argv):
     datafile = argv[1]
     raw_data = load_input(datafile)
     fdata = filter_garbage(raw_data)
     print(fdata)
+    data_score = score(fdata)
+    print('Score = %d' % (data_score))
 
 
 if __name__ == '__main__':
