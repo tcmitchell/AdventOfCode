@@ -4,6 +4,7 @@ import datetime
 import logging
 import sys
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'),
@@ -38,15 +39,18 @@ def remove_unit_pair(polymer):
     return False
 
 
+def reactive(a, b):
+    return match_test(a, b)
+
+
 def collapse(s):
-    p = ['.']
+    p = []
     for u in s:
-        v = p[-1]
-        if v != u and v.lower() == u.lower():
+        if p and reactive(u, p[-1]):
             p.pop()
         else:
             p.append(u)
-    return len(p) - 1
+    return len(p)
 
 
 def main(argv):
@@ -66,10 +70,12 @@ def main(argv):
         tmp_polymer = [p for p in polymer if p.upper() != uu]
         logging.info('Polymer length is now {}'.format(len(tmp_polymer)))
         tmp_len = collapse(tmp_polymer)
-        print('Polymer final length is {} after removing {}'.format(tmp_len, uu))
+        print('Polymer final length is {} after removing {}'.format(tmp_len,
+                                                                    uu))
         if tmp_len < lowest[0]:
             lowest = (tmp_len, uu)
-        print('Shortest polymer is {} after removing {}'.format(lowest[0], lowest[1]))
+        print('Shortest polymer is {} after removing {}'.format(lowest[0],
+                                                                lowest[1]))
 
 
 if __name__ == '__main__':

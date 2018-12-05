@@ -4,6 +4,7 @@ import datetime
 import logging
 import sys
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'),
