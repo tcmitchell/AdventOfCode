@@ -30,12 +30,25 @@ def match_test(a, b):
     return a != b and a.upper() == b.upper()
 
 
+# SLOW! works, but slowly. 35 seconds.
 def remove_unit_pair(polymer):
     for i in range(len(polymer) - 1):
         if match_test(polymer[i], polymer[i+1]):
             del(polymer[i:i+2])
             return True
     return False
+
+
+# FAST! 0.1 seconds.
+def collapse(s):
+    p = ['.']
+    for u in s:
+        v = p[-1]
+        if v != u and v.lower() == u.lower():
+            p.pop()
+        else:
+            p.append(u)
+    return len(p) - 1
 
 
 def main(argv):
@@ -47,10 +60,9 @@ def main(argv):
     init_logging(args.debug)
 
     polymer = list(load_input(args.input))
-    while remove_unit_pair(polymer):
-        pass
-    print('Polymer final length is {}'.format(len(polymer)))
-    print('Final polymer is {}'.format(polymer))
+    print(collapse(polymer))
+    # print('Final polymer is {}'.format(polymer))
+    # print('Polymer final length is {}'.format(len(polymer)))
 
 
 if __name__ == '__main__':
