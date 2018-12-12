@@ -49,8 +49,23 @@ def next_gen(rules, pots):
         return '.'
 
 
-# Dynamically pad on both left and right.
-# Track left padding for subtraction in final computation
+def sum_pots(pots, lpadding):
+    potsum = 0
+    for i in range(len(pots)):
+        if pots[i] == '#':
+            logging.debug('pot[{}] has a plant'.format(i - 20))
+            potsum += i - lpadding
+    return potsum
+
+
+# The formula for predicting the value for a generation is:
+#
+#       (gen - 126) * 36 + 3994
+#
+# Since the generation index is zero based in the loop below,
+# we only subtract 125 to account for that one off.
+def predicted_sum(gen):
+    return (gen - 125) * 36 + 3994
 
 
 def main(argv):
@@ -78,17 +93,29 @@ def main(argv):
         pots.extend(['.'] * extension_size)
 
 #    logging.debug(' 0: {}'.format(''.join(pots)))
+    old_potsum = 0
     generations = 50000000000
     generations = 500
-    generations = 5000
-    generations = 50000
-#    generations = 20
+    # generations = 5000
+    # generations = 50000
+    # generations = 200
     for gen in range(generations):
         new_pots = [pots[0], pots[1]]
         for i in range(len(pots) - 4):
             new_pots.append(next_gen(rules, pots[i:i + 5]))
         new_pots.extend(pots[-2:])
         pots = new_pots
+
+        potsum = sum_pots(pots, lpadding)
+        logging.info('Gen {}: {} ({})'.format(gen, potsum,
+                                              potsum - old_potsum))
+        if gen > 125:
+            predicted = predicted_sum(gen)
+            if potsum == predicted:
+                logging.info('{} == {}'.format(potsum, predicted))
+            else:
+                logging.warn('{} != {}'.format(potsum, predicted))
+        old_potsum = potsum
 
         # Maybe pad the pots on either side
         if '#' in pots[:3]:

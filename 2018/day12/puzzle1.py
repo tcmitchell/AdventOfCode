@@ -9,6 +9,7 @@ import time
 
 # Right: 1696
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'),
@@ -38,10 +39,10 @@ def load_input(fp):
 def next_gen(rules, pots):
     pots = ''.join(pots)
     if pots in rules:
-#        logging.debug('{} => {}'.format(pots, rules[pots]))
+        # logging.debug('{} => {}'.format(pots, rules[pots]))
         return rules[pots]
     else:
-#        logging.debug('{} => . *'.format(pots))
+        # logging.debug('{} => . *'.format(pots))
         return '.'
 
 
@@ -69,7 +70,8 @@ def main(argv):
         new_pots.extend(pots[-2:])
         pots = new_pots
         plants += pots.count('#')
-        logging.debug('{: >2d}: {}  ({})'.format(gen + 1, ''.join(pots), plants))
+        logging.debug('{: >2d}: {}  ({})'.format(gen + 1, ''.join(pots),
+                                                 plants))
     potsum = 0
     for i in range(len(pots)):
         if pots[i] == '#':
