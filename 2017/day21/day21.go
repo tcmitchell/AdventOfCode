@@ -32,7 +32,7 @@ func loadRules(c chan string) map[string]string {
 	for rule := range c {
 		// fmt.Println(rule)
 		parts := strings.Split(rule, " => ")
-		fmt.Printf("%s -> %s\n", parts[0], parts[1])
+		// fmt.Printf("%s -> %s\n", parts[0], parts[1])
 		result[parts[0]] = parts[1]
 	}
 	return result
@@ -125,13 +125,43 @@ func imageSize(image string) int {
 	return len([]rune(strings.Split(image, "/")[0]))
 }
 
+// Break up an image into smaller images, each of the given size
+func breakUpImage(image string, size int) ([]string, error) {
+	// fmt.Printf("bUI  input: %s\n", image)
+	// Break the image up into pixels
+	rows := strings.Split(image, "/")
+	pixels := make([][]string, len(rows))
+	for i, row := range rows {
+		// fmt.Println(row)
+		pixels[i] = strings.Split(row, "")
+	}
+	result := make([]string, 0)
+	for r := 0; r<imageSize(image); r+= size {
+		for c := 0; c<imageSize(image); c+=size {
+			subImage := make([]string, size)
+			for i := 0; i < size; i++ {
+				// fmt.Printf("r=%d; c=%d; i=%d\n", r, c, i)
+				subImage[i] = strings.Join(pixels[r+i][c:c+size], "")
+				// fmt.Printf("subImage[%d]: %s\n", i, subImage[i])
+			}
+			result = append(result, strings.Join(subImage, "/"))
+		}
+	}
+
+	// for _, img := range result {
+	// 	fmt.Println(img)
+	// }
+
+	return result, nil
+}
+
 func part1() {
 	c := make(chan string, 1)
-	go ReadInputLines("input.txt", c)
+	go ReadInputLines("testinput.txt", c)
 	rules := loadRules(c)
-	for rule := range rules {
-		fmt.Printf("%s to %s\n", rule, rules[rule])
-	}
+	// for rule := range rules {
+	// 	fmt.Printf("%s to %s\n", rule, rules[rule])
+	// }
 	image := ".#./..#/###"
 	image2, err := lookUpImage(rules, image)
 	if err != nil {
@@ -139,6 +169,13 @@ func part1() {
 	}
 	fmt.Printf("Image 2: %s\n", image2)
 	fmt.Printf("Image 2 size: %d\n", imageSize(image2))
+	imgs, err := breakUpImage(image2, 2)
+	if err != nil {
+		panic(err)
+	}
+	for i, img := range imgs {
+		fmt.Printf("Subimage %d: %s\n", i, img)
+	}
 }
 
 func main() {
