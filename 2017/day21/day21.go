@@ -79,6 +79,9 @@ func permuteImage(image string) ([]string, error) {
 	result[0] = image
 	for i := 1; i < 4; i++ {
 		result[i], err = rotateImage(result[i-1])
+		if err != nil {
+			return nil, err
+		}
 	}
 	result[4], err = flipImage(image)
 	if err != nil {
@@ -86,6 +89,9 @@ func permuteImage(image string) ([]string, error) {
 	}
 	for i := 5; i < 8; i++ {
 		result[i], err = rotateImage(result[i-1])
+		if err != nil {
+			return nil, err
+		}
 	}
 	return result, nil
 }
