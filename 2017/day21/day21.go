@@ -38,8 +38,8 @@ func loadRules(c chan string) map[string]string {
 	return result
 }
 
-func transformBoard(board string, xform []int) (string, error) {
-	exploded := strings.Split(board, "")
+func transformImage(image string, xform []int) (string, error) {
+	exploded := strings.Split(image, "")
 	result := make([]string, len(exploded))
 	for i := 0; i < len(xform); i++ {
 		result[i] = exploded[xform[i]]
@@ -47,76 +47,76 @@ func transformBoard(board string, xform []int) (string, error) {
 	return strings.Join(result, ""), nil
 }
 
-func rotateBoard(board string) (string, error) {
-	boardSize := boardSize(board)
-	if boardSize == 2 {
+func rotateImage(image string) (string, error) {
+	size := imageSize(image)
+	if size == 2 {
 		xform := []int{3, 0, 2, 4, 1}
-		return transformBoard(board, xform)
+		return transformImage(image, xform)
 	}
-	if boardSize == 3 {
+	if size == 3 {
 		xform := []int{8, 4, 0, 3, 9, 5, 1, 7, 10, 6, 2}
-		return transformBoard(board, xform)
+		return transformImage(image, xform)
 	}
-	return "", fmt.Errorf("Unknown board size %d", boardSize)
+	return "", fmt.Errorf("Unknown image size %d", size)
 }
 
-func flipBoard(board string) (string, error) {
-	boardSize := boardSize(board)
-	if boardSize == 2 {
+func flipImage(image string) (string, error) {
+	size := imageSize(image)
+	if size == 2 {
 		xform := []int{3, 4, 2, 0, 1}
-		return transformBoard(board, xform)
+		return transformImage(image, xform)
 	}
-	if boardSize == 3 {
+	if size == 3 {
 		xform := []int{8, 9, 10, 3, 4, 5, 6, 7, 0, 1, 2}
-		return transformBoard(board, xform)
+		return transformImage(image, xform)
 	}
-	return "", fmt.Errorf("Unknown board size %d", boardSize)
+	return "", fmt.Errorf("Unknown image size %d", size)
 }
 
-func permuteBoard(board string) ([]string, error) {
+func permuteImage(image string) ([]string, error) {
 	var err error
 	result := make([]string, 8)
-	result[0] = board
+	result[0] = image
 	for i := 1; i < 4; i++ {
-		result[i], err = rotateBoard(result[i-1])
+		result[i], err = rotateImage(result[i-1])
 	}
-	result[4], err = flipBoard(board)
+	result[4], err = flipImage(image)
 	if err != nil {
 		return nil, err
 	}
 	for i := 5; i < 8; i++ {
-		result[i], err = rotateBoard(result[i-1])
+		result[i], err = rotateImage(result[i-1])
 	}
 	return result, nil
 }
 
-func lookUpBoard(rules map[string]string, board string) (string, error) {
-	// Look up the board in the rules, rotating and flipping
-	// the board as necessary to find the rule.
-	newBoard, ok := rules[board]
+func lookUpImage(rules map[string]string, image string) (string, error) {
+	// Look up the image in the rules, rotating and flipping
+	// the image as necessary to find the rule.
+	newImage, ok := rules[image]
 	if ok {
-		return newBoard, nil
+		return newImage, nil
 	}
-	// If the board as passed is not in the rules, permute
+	// If the image as passed is not in the rules, permute
 	// it, and try the permutations in turn. Skip the first
-	// entry because it is the original board and we know
+	// entry because it is the original image and we know
 	// that's not in there.
-	boards, err := permuteBoard(board)
+	images, err := permuteImage(image)
 	if err != nil {
 		return "", err
 	}
-	for _, b := range boards[1:] {
-		newBoard, ok := rules[b]
+	for _, b := range images[1:] {
+		newImage, ok := rules[b]
 		if ok {
-			return newBoard, nil
+			return newImage, nil
 		}
 	}
-	return "", fmt.Errorf("No match for %s", board)
+	return "", fmt.Errorf("No match for %s", image)
 }
 
-// Determine the size of a board
-func boardSize(board string) int {
-	return len([]rune(strings.Split(board, "/")[0]))
+// Determine the size of a image
+func imageSize(image string) int {
+	return len([]rune(strings.Split(image, "/")[0]))
 }
 
 func part1() {
@@ -126,13 +126,13 @@ func part1() {
 	for rule := range rules {
 		fmt.Printf("%s to %s\n", rule, rules[rule])
 	}
-	board := ".#./..#/###"
-	board2, err := lookUpBoard(rules, board)
+	image := ".#./..#/###"
+	image2, err := lookUpImage(rules, image)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Board 2: %s\n", board2)
-	fmt.Printf("Board 2 size: %d\n", boardSize(board2))
+	fmt.Printf("Image 2: %s\n", image2)
+	fmt.Printf("Image 2 size: %d\n", imageSize(image2))
 }
 
 func main() {
