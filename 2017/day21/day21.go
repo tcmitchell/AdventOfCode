@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 )
@@ -136,8 +137,8 @@ func breakUpImage(image string, size int) ([]string, error) {
 		pixels[i] = strings.Split(row, "")
 	}
 	result := make([]string, 0)
-	for r := 0; r<imageSize(image); r+= size {
-		for c := 0; c<imageSize(image); c+=size {
+	for r := 0; r < imageSize(image); r += size {
+		for c := 0; c < imageSize(image); c += size {
 			subImage := make([]string, size)
 			for i := 0; i < size; i++ {
 				// fmt.Printf("r=%d; c=%d; i=%d\n", r, c, i)
@@ -153,6 +154,44 @@ func breakUpImage(image string, size int) ([]string, error) {
 	// }
 
 	return result, nil
+}
+
+// Assemble the sub images into a composite image
+func assembleImage(images []string) (string, error) {
+	// get the size of the first image
+	imgSize := imageSize(images[0])
+	// verify all the images are the same size?
+	splitImages := make([][]string, len(images))
+	for i, img := range images {
+		splitImages[i] = strings.Split(img, "/")
+	}
+	// determine dimensions of final image
+	destSize := int(math.Sqrt(float64(len(images))))
+	// fmt.Println("destSize =", destSize)
+	destRows := destSize * imgSize
+	// fmt.Println("destRows =", destRows)
+	rows := make([]string, destRows)
+	r := 0
+	for img := 0; img < len(images); img += destSize {
+		for c := 0; c < imgSize; c++ {
+			for i := 0; i < destSize; i++ {
+				// Build rows
+				// fmt.Printf("img: %d; i: %d; c: %d\n", img, i, c)
+				// fmt.Printf("rows[%d] = splitImages[%d][%d]\n", r, img+i, c)
+				rows[r] += splitImages[img+i][c]
+			}
+			r++
+		}
+	}
+	image := strings.Join(rows, "/")
+	fmt.Println("assembleImage:", image)
+	return image, nil
+}
+
+// Enhances an image by breaking it up into subimages, enhancing each
+// subimage, then assembling the subimages into a whole.
+func enhanceImage(image string) (string, error) {
+	return "", nil
 }
 
 func part1() {
@@ -175,7 +214,15 @@ func part1() {
 	}
 	for i, img := range imgs {
 		fmt.Printf("Subimage %d: %s\n", i, img)
+		imgs[i], err = lookUpImage(rules, img)
+		if err != nil {
+			panic(err)
+		}
 	}
+	for i, img := range imgs {
+		fmt.Printf("Enhanced Subimage %d: %s\n", i, img)
+	}
+	assembleImage(imgs)
 }
 
 func main() {
