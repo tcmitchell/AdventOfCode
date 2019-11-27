@@ -10,6 +10,12 @@ import (
 // Grid represents the cluster computing grid
 type Grid map[string]string
 
+// CLEAN state
+const CLEAN = "."
+
+// INFECTED state
+const INFECTED = "#"
+
 // ReadInputLines reads the input file line by line,
 // passing each line to the given channel.
 func ReadInputLines(infile string, c chan string) {
@@ -31,27 +37,20 @@ func gridEntry(x, y int) string {
 	return fmt.Sprintf("%d,%d", x, y)
 }
 
-func infectGrid(grid Grid, x, y int) {
-	grid[gridEntry(x, y)] = "#"
-}
-
-func cleanGrid(grid Grid, x, y int) {
-	delete(grid, gridEntry(x, y))
+func setGrid(grid Grid, x, y int, state string) {
+	if state == CLEAN {
+		delete(grid, gridEntry(x, y))
+	} else {
+		grid[gridEntry(x, y)] = state
+	}
 }
 
 func gridState(grid Grid, x, y int) string {
-	if gridInfected(grid, x, y) {
-		return "#"
-	}
-	return "."
-}
-
-func gridInfected(grid Grid, x, y int) bool {
 	state, ok := grid[gridEntry(x, y)]
-	// fmt.Printf("grid[%s]: state=%s; ok=%t\n", gridEntry(x, y), state, ok)
-	// A grid node is infected if the entry is present
-	// AND the entry is "#"
-	return ok && state == "#"
+	if !ok {
+		state = CLEAN
+	}
+	return state
 }
 
 func loadGrid(c chan string) (Grid, int, int) {
@@ -66,10 +65,8 @@ func loadGrid(c chan string) (Grid, int, int) {
 	grid := make(map[string]string, nRows)
 	for y := range result {
 		for x, state := range result[y] {
-			if state == "#" {
-				yValue := nRows - y - 1
-				infectGrid(grid, x, yValue)
-			}
+			yValue := nRows - y - 1
+			setGrid(grid, x, yValue, state)
 		}
 	}
 	// for y := nRows; y > 0; y-- {
@@ -89,13 +86,13 @@ func moveForward(x, y int, direction Direction) (int, int) {
 func carrierBurst(grid Grid, x, y int, direction Direction) (int, int, Direction, bool) {
 	// fmt.Printf("carrierBurst(%d, %d, %s)\n", x, y, direction.name)
 	infected := false
-	if gridInfected(grid, x, y) {
-		// fmt.Printf("grid[%d,%d] is infected\n", x, y)
+	switch gridState(grid, x, y) {
+	case INFECTED:
 		direction = turnRight(direction)
-		cleanGrid(grid, x, y)
-	} else {
+		setGrid(grid, x, y, CLEAN)
+	case CLEAN:
 		direction = turnLeft(direction)
-		infectGrid(grid, x, y)
+		setGrid(grid, x, y, INFECTED)
 		infected = true
 	}
 	// fmt.Printf("Moving %s from %d,%d", direction.name, x, y)
