@@ -3,14 +3,15 @@ package main
 // Direction holds the x and y offsets to move
 // in a given direction
 type Direction struct {
-	x int
-	y int
+	x    int
+	y    int
+	name string
 }
 
-var up = Direction{0, 1}
-var down = Direction{0, -1}
-var left = Direction{-1, 0}
-var right = Direction{1, 0}
+var up = Direction{0, 1, "up"}
+var down = Direction{0, -1, "down"}
+var left = Direction{-1, 0, "left"}
+var right = Direction{1, 0, "right"}
 
 func turnLeft(d Direction) Direction {
 	switch d {
