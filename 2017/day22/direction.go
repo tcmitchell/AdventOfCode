@@ -40,3 +40,17 @@ func turnRight(d Direction) Direction {
 	}
 	panic("Unknown direction")
 }
+
+func reverse(d Direction) Direction {
+	switch d {
+	case up:
+		return down
+	case right:
+		return left
+	case down:
+		return up
+	case left:
+		return right
+	}
+	panic("Unknown direction")
+}

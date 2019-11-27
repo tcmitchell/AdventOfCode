@@ -19,6 +19,12 @@ const CLEAN = "."
 // INFECTED state
 const INFECTED = "#"
 
+// FLAGGED state
+const FLAGGED = "F"
+
+// WEAKENED state
+const WEAKENED = "W"
+
 // ReadInputLines reads the input file line by line,
 // passing each line to the given channel.
 func ReadInputLines(infile string, c chan string) {
@@ -104,8 +110,8 @@ func runCarrier(grid Grid, x, y int, activityBurst burstFunc, iters int) {
 	// fmt.Printf("Initial position [%d, %d]\n", x, y)
 	direction := up
 	// fmt.Println("Direction:", direction)
-	for i := 0; i < 10000; i++ {
-		x, y, direction, infected = carrierBurst(grid, x, y, direction)
+	for i := 0; i < iters; i++ {
+		x, y, direction, infected = activityBurst(grid, x, y, direction)
 		if infected {
 			infectedCount++
 		}
@@ -119,9 +125,41 @@ func part1(grid Grid, x, y int) {
 	runCarrier(grid, x, y, carrierBurst, 10000)
 }
 
+func carrierBurst2(grid Grid, x, y int, direction Direction) (int, int, Direction, bool) {
+	// fmt.Printf("carrierBurst2(%d, %d, %s)\n", x, y, direction.name)
+	infected := false
+	switch gridState(grid, x, y) {
+	case CLEAN:
+		direction = turnLeft(direction)
+		setGrid(grid, x, y, WEAKENED)
+	case WEAKENED:
+		// Keep current direction
+		setGrid(grid, x, y, INFECTED)
+		infected = true
+	case INFECTED:
+		direction = turnRight(direction)
+		setGrid(grid, x, y, FLAGGED)
+	case FLAGGED:
+		direction = reverse(direction)
+		setGrid(grid, x, y, CLEAN)
+	}
+	// fmt.Printf("Moving %s from %d,%d", direction.name, x, y)
+	x, y = moveForward(x, y, direction)
+	// fmt.Printf(" to %d, %d\n", x, y)
+	return x, y, direction, infected
+}
+
+func part2(puzzleInput string) {
+	c := make(chan string, 1)
+	go ReadInputLines(puzzleInput, c)
+	grid, x, y := loadGrid(c)
+	runCarrier(grid, x, y, carrierBurst2, 10000000)
+}
+
 func main() {
 	c := make(chan string, 1)
 	go ReadInputLines("input.txt", c)
 	grid, x, y := loadGrid(c)
 	part1(grid, x, y)
+	part2("input.txt")
 }
