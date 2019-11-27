@@ -10,6 +10,9 @@ import (
 // Grid represents the cluster computing grid
 type Grid map[string]string
 
+// A function to perform a burst of activity by the carrier
+type burstFunc func(grid Grid, x, y int, direction Direction) (int, int, Direction, bool)
+
 // CLEAN state
 const CLEAN = "."
 
@@ -69,12 +72,6 @@ func loadGrid(c chan string) (Grid, int, int) {
 			setGrid(grid, x, yValue, state)
 		}
 	}
-	// for y := nRows; y > 0; y-- {
-	// 	for x := 0; x < nRows; x++ {
-	// 		fmt.Printf("%s", gridState(grid, x, y-1))
-	// 	}
-	// 	fmt.Println()
-	// }
 	midpoint := nRows / 2
 	return grid, midpoint, midpoint
 }
@@ -101,7 +98,7 @@ func carrierBurst(grid Grid, x, y int, direction Direction) (int, int, Direction
 	return x, y, direction, infected
 }
 
-func part1(grid Grid, x, y int) {
+func runCarrier(grid Grid, x, y int, activityBurst burstFunc, iters int) {
 	infectedCount := 0
 	var infected bool
 	// fmt.Printf("Initial position [%d, %d]\n", x, y)
@@ -118,10 +115,13 @@ func part1(grid Grid, x, y int) {
 	fmt.Printf("Infected %d nodes\n", infectedCount)
 }
 
+func part1(grid Grid, x, y int) {
+	runCarrier(grid, x, y, carrierBurst, 10000)
+}
+
 func main() {
 	c := make(chan string, 1)
 	go ReadInputLines("input.txt", c)
 	grid, x, y := loadGrid(c)
-	// fmt.Printf("Centerpoint = %d, %d\n", x, y)
 	part1(grid, x, y)
 }
