@@ -190,18 +190,53 @@ func assembleImage(images []string) (string, error) {
 
 // Enhances an image by breaking it up into subimages, enhancing each
 // subimage, then assembling the subimages into a whole.
-func enhanceImage(image string) (string, error) {
-	return "", nil
+func enhanceImage(rules map[string]string, image string) (string, error) {
+	size := imageSize(image)
+	subimageSize := 0
+	if math.Mod(float64(size), 2) == 0 {
+		subimageSize = 2
+	} else if math.Mod(float64(size), 3) == 0 {
+		subimageSize = 3
+	} else {
+		fmt.Errorf("%d is not divisible by 2 or 3", size)
+	}
+	imgs, err := breakUpImage(image, subimageSize)
+	if err != nil {
+		return "", err
+	}
+	for i, img := range imgs {
+		newImage, err := lookUpImage(rules, img)
+		if err != nil {
+			return "", err
+		}
+		imgs[i] = newImage
+	}
+	return assembleImage(imgs)
 }
 
 func part1() {
 	c := make(chan string, 1)
-	go ReadInputLines("testinput.txt", c)
+	go ReadInputLines("input.txt", c)
 	rules := loadRules(c)
 	// for rule := range rules {
 	// 	fmt.Printf("%s to %s\n", rule, rules[rule])
 	// }
+	var err error
 	image := ".#./..#/###"
+	for i := 0; i < 5; i++ {
+		image, err = enhanceImage(rules, image)
+		if err != nil {
+			panic(err)
+		}
+	}
+	countOn := 0
+	for _, row := range strings.Split(image, "/") {
+		fmt.Println(row)
+		countOn += strings.Count(row, "#")
+	}
+	fmt.Printf("%d pixels are on", countOn)
+	return
+
 	image2, err := lookUpImage(rules, image)
 	if err != nil {
 		panic(err)
