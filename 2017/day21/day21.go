@@ -214,13 +214,7 @@ func enhanceImage(rules map[string]string, image string) (string, error) {
 	return assembleImage(imgs)
 }
 
-func part1() {
-	c := make(chan string, 1)
-	go ReadInputLines("input.txt", c)
-	rules := loadRules(c)
-	// for rule := range rules {
-	// 	fmt.Printf("%s to %s\n", rule, rules[rule])
-	// }
+func part1(rules map[string]string) (string, error) {
 	var err error
 	image := ".#./..#/###"
 	for i := 0; i < 5; i++ {
@@ -234,32 +228,35 @@ func part1() {
 		fmt.Println(row)
 		countOn += strings.Count(row, "#")
 	}
-	fmt.Printf("%d pixels are on", countOn)
-	return
+	fmt.Printf("Part1: %d pixels are on", countOn)
+	return image, nil
+}
 
-	image2, err := lookUpImage(rules, image)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Image 2: %s\n", image2)
-	fmt.Printf("Image 2 size: %d\n", imageSize(image2))
-	imgs, err := breakUpImage(image2, 2)
-	if err != nil {
-		panic(err)
-	}
-	for i, img := range imgs {
-		fmt.Printf("Subimage %d: %s\n", i, img)
-		imgs[i], err = lookUpImage(rules, img)
+func part2(rules map[string]string, image string) (string, error) {
+	var err error
+	for i := 0; i < 13; i++ {
+		image, err = enhanceImage(rules, image)
 		if err != nil {
 			panic(err)
 		}
 	}
-	for i, img := range imgs {
-		fmt.Printf("Enhanced Subimage %d: %s\n", i, img)
+	countOn := 0
+	for _, row := range strings.Split(image, "/") {
+		fmt.Println(row)
+		countOn += strings.Count(row, "#")
 	}
-	assembleImage(imgs)
+	fmt.Printf("Part2: %d pixels are on", countOn)
+	return image, nil
 }
 
 func main() {
-	part1()
+	c := make(chan string, 1)
+	go ReadInputLines("input.txt", c)
+	rules := loadRules(c)
+
+	image, err := part1(rules)
+	if err != nil {
+		panic(err)
+	}
+	part2(rules, image)
 }
