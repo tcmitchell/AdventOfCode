@@ -105,7 +105,7 @@ func buildBridges(bridges []bridge) []bridge {
 	return result
 }
 
-func part1(puzzleInput string) {
+func part1(puzzleInput string) []bridge {
 	c := make(chan string, 1)
 	go ReadInputLines(puzzleInput, c)
 	components, err := loadComponents(c)
@@ -155,10 +155,31 @@ func part1(puzzleInput string) {
 			strongest = strength
 		}
 	}
-	fmt.Printf("Strongest bridge: %d", strongest)
+	fmt.Printf("Strongest bridge: %d\n", strongest)
+	return bridges
+}
 
+func part2(bridges []bridge) {
+	longest := 0
+	strongest := 0
+	for _, b := range bridges {
+		bLen := len(b.components)
+		if bLen > longest {
+			longest = bLen
+			strongest = b.strength()
+			continue
+		}
+		if bLen == longest {
+			if b.strength() > strongest {
+				strongest = b.strength()
+			}
+			continue
+		}
+	}
+	fmt.Printf("The longest bridge is %d; the strongest longest bridge is %d", longest, strongest)
 }
 
 func main() {
-	part1("input.txt")
+	bridges := part1("input.txt")
+	part2(bridges)
 }
