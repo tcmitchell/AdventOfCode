@@ -28,6 +28,21 @@ func fuelRequired(mass float64) int {
 	return int(math.Floor(mass/3)) - 2
 }
 
+func fuelRequired2(mass float64) int {
+	totalFuel := fuelRequired(mass)
+	moreFuel := totalFuel
+	for {
+		// fmt.Printf("Computing more fuel for %d\n", moreFuel)
+		moreFuel = fuelRequired(float64(moreFuel))
+		// fmt.Printf("moreFuel = %d\n", moreFuel)
+		if moreFuel <= 0 {
+			break
+		}
+		totalFuel += moreFuel
+	}
+	return totalFuel
+}
+
 func computeFuel(c chan string) int {
 	var totalFuel, mass int
 	for line := range c {
@@ -37,13 +52,30 @@ func computeFuel(c chan string) int {
 	return totalFuel
 }
 
+func computeFuel2(c chan string) int {
+	var totalFuel, mass int
+	for line := range c {
+		fmt.Sscanf(line, "%d", &mass)
+		totalFuel += fuelRequired2(float64(mass))
+	}
+	return totalFuel
+}
+
 func part1(puzzleInput string) {
 	c := make(chan string, 1)
 	go ReadInputLines(puzzleInput, c)
 	totalFuel := computeFuel(c)
-	fmt.Printf("Part1: Total fuel = %d", totalFuel)
+	fmt.Printf("Part1: Total fuel = %d\n", totalFuel)
+}
+
+func part2(puzzleInput string) {
+	c := make(chan string, 1)
+	go ReadInputLines(puzzleInput, c)
+	totalFuel := computeFuel2(c)
+	fmt.Printf("Part2: Total fuel = %d\n", totalFuel)
 }
 
 func main() {
 	part1("input.txt")
+	part2("input.txt")
 }

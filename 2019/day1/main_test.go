@@ -19,3 +19,14 @@ func TestFuelRequired(t *testing.T) {
 		}
 	}
 }
+
+func TestPart2(t *testing.T) {
+	input := []int{12, 14, 1969, 100756}
+	expected := []int{2, 2, 966, 50346}
+	for i, in := range input {
+		got := fuelRequired2(float64(in))
+		if got != expected[i] {
+			t.Errorf("part2 returned %d, expected %d", got, expected[i])
+		}
+	}
+}
