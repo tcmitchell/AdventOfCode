@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // fuelComputer is a function that computes the fuel required for
@@ -46,9 +47,9 @@ func fuelRequired2(mass int) int {
 }
 
 func computeFuel(c chan string, fuelFunc fuelComputer) int {
-	var totalFuel, mass int
+	totalFuel := 0
 	for line := range c {
-		fmt.Sscanln(line, &mass)
+		mass, _ := strconv.Atoi(line)
 		totalFuel += fuelFunc(mass)
 	}
 	return totalFuel
