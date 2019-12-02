@@ -38,7 +38,7 @@ func TestComputeFuel(t *testing.T) {
 		c <- in
 	}
 	close(c)
-	got := computeFuel(c)
+	got := computeFuel(c, fuelRequired)
 	expected := 34241
 	if got != expected {
 		t.Errorf("part2 returned %d, expected %d", got, expected)
@@ -52,7 +52,7 @@ func TestComputeFuel2(t *testing.T) {
 		c <- in
 	}
 	close(c)
-	got := computeFuel2(c)
+	got := computeFuel(c, fuelRequired2)
 	expected := 51316
 	if got != expected {
 		t.Errorf("part2 returned %d, expected %d", got, expected)

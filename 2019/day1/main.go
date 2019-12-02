@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+// fuelComputer is a function that computes the fuel required for
+// a given mass.
+type fuelComputer func(mass int) int
+
 // ReadInputLines reads the input file line by line,
 // passing each line to the given channel.
 func ReadInputLines(infile string, c chan string) {
@@ -41,20 +45,11 @@ func fuelRequired2(mass int) int {
 	return totalFuel
 }
 
-func computeFuel(c chan string) int {
+func computeFuel(c chan string, fuelFunc fuelComputer) int {
 	var totalFuel, mass int
 	for line := range c {
 		fmt.Sscanln(line, &mass)
-		totalFuel += fuelRequired(mass)
-	}
-	return totalFuel
-}
-
-func computeFuel2(c chan string) int {
-	var totalFuel, mass int
-	for line := range c {
-		fmt.Sscanln(line, &mass)
-		totalFuel += fuelRequired2(mass)
+		totalFuel += fuelFunc(mass)
 	}
 	return totalFuel
 }
@@ -62,14 +57,14 @@ func computeFuel2(c chan string) int {
 func part1(puzzleInput string) {
 	c := make(chan string, 1)
 	go ReadInputLines(puzzleInput, c)
-	totalFuel := computeFuel(c)
+	totalFuel := computeFuel(c, fuelRequired)
 	fmt.Printf("Part1: Total fuel = %d\n", totalFuel)
 }
 
 func part2(puzzleInput string) {
 	c := make(chan string, 1)
 	go ReadInputLines(puzzleInput, c)
-	totalFuel := computeFuel2(c)
+	totalFuel := computeFuel(c, fuelRequired2)
 	fmt.Printf("Part2: Total fuel = %d\n", totalFuel)
 }
 
