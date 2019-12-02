@@ -13,20 +13,48 @@ func TestFuelRequired(t *testing.T) {
 	input := []int{12, 14, 1969, 100756}
 	expected := []int{2, 2, 654, 33583}
 	for i, in := range input {
-		got := fuelRequired(float64(in))
+		got := fuelRequired(in)
 		if got != expected[i] {
 			t.Errorf("fuelRequired returned %d, expected %d", got, expected[i])
 		}
 	}
 }
 
-func TestPart2(t *testing.T) {
+func TestFuelRequired2(t *testing.T) {
 	input := []int{12, 14, 1969, 100756}
 	expected := []int{2, 2, 966, 50346}
 	for i, in := range input {
-		got := fuelRequired2(float64(in))
+		got := fuelRequired2(in)
 		if got != expected[i] {
 			t.Errorf("part2 returned %d, expected %d", got, expected[i])
 		}
+	}
+}
+
+func TestComputeFuel(t *testing.T) {
+	input := []string{"12", "14", "1969", "100756"}
+	c := make(chan string, len(input))
+	for _, in := range input {
+		c <- in
+	}
+	close(c)
+	got := computeFuel(c)
+	expected := 34241
+	if got != expected {
+		t.Errorf("part2 returned %d, expected %d", got, expected)
+	}
+}
+
+func TestComputeFuel2(t *testing.T) {
+	input := []string{"12", "14", "1969", "100756"}
+	c := make(chan string, len(input))
+	for _, in := range input {
+		c <- in
+	}
+	close(c)
+	got := computeFuel2(c)
+	expected := 51316
+	if got != expected {
+		t.Errorf("part2 returned %d, expected %d", got, expected)
 	}
 }
