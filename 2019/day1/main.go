@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 )
 
@@ -24,21 +23,20 @@ func ReadInputLines(infile string, c chan string) {
 	close(c)
 }
 
-func fuelRequired(mass float64) int {
-	return int(math.Floor(mass/3)) - 2
+func fuelRequired(mass int) int {
+	return mass/3 - 2
 }
 
-func fuelRequired2(mass float64) int {
-	totalFuel := fuelRequired(mass)
-	moreFuel := totalFuel
+func fuelRequired2(mass int) int {
+	totalFuel := 0
 	for {
 		// fmt.Printf("Computing more fuel for %d\n", moreFuel)
-		moreFuel = fuelRequired(float64(moreFuel))
+		mass = fuelRequired(mass)
 		// fmt.Printf("moreFuel = %d\n", moreFuel)
-		if moreFuel <= 0 {
+		if mass <= 0 {
 			break
 		}
-		totalFuel += moreFuel
+		totalFuel += mass
 	}
 	return totalFuel
 }
@@ -46,8 +44,8 @@ func fuelRequired2(mass float64) int {
 func computeFuel(c chan string) int {
 	var totalFuel, mass int
 	for line := range c {
-		fmt.Sscanf(line, "%d", &mass)
-		totalFuel += fuelRequired(float64(mass))
+		fmt.Sscanln(line, &mass)
+		totalFuel += fuelRequired(mass)
 	}
 	return totalFuel
 }
@@ -55,8 +53,8 @@ func computeFuel(c chan string) int {
 func computeFuel2(c chan string) int {
 	var totalFuel, mass int
 	for line := range c {
-		fmt.Sscanf(line, "%d", &mass)
-		totalFuel += fuelRequired2(float64(mass))
+		fmt.Sscanln(line, &mass)
+		totalFuel += fuelRequired2(mass)
 	}
 	return totalFuel
 }
