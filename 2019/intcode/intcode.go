@@ -10,56 +10,72 @@ import (
 // Program is a series of intcode instructions and parameters
 type Program []int
 
+var opcodeAdd = 1
+var opcodeMultiply = 2
+var opcodeEnd = 99
+
+// EndOfProgram indicates the program is complete
+var EndOfProgram = 99
+
 // Execute a single opcode of an Intcode program
-func Execute(intcode []int, pc int) int {
+func Execute(intcode []int, pc int) (int, error) {
 	opcode := intcode[pc]
 	switch opcode {
-	case 1:
+	case opcodeAdd:
 		// Add
 		intcode[intcode[pc+3]] = intcode[intcode[pc+1]] + intcode[intcode[pc+2]]
-		return 4
-	case 2:
+		return 4, nil
+	case opcodeMultiply:
 		// Multiply
 		intcode[intcode[pc+3]] = intcode[intcode[pc+1]] * intcode[intcode[pc+2]]
-		return 4
-	case 99:
-		return opcode
+		return 4, nil
+	case opcodeEnd:
+		return EndOfProgram, nil
 	default:
-		panic(fmt.Errorf("Unknown opcode %d", opcode))
+		return 0, fmt.Errorf("Unknown opcode %d", opcode)
 	}
 }
 
 // Load an intcode program from file
-func Load(filename string) []int {
+func Load(filename string) (Program, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	strcode := strings.Split(string(bytes), ",")
-	program := make([]int, len(strcode))
+	rawCode := strings.TrimSpace(string(bytes))
+	strcode := strings.Split(rawCode, ",")
+	program := make(Program, len(strcode))
 	for i, s := range strcode {
 		program[i], err = strconv.Atoi(s)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return program
+	return program, nil
 }
 
 // Run executes an intcode program
-func Run(program Program) Program {
+func Run(program Program) (Program, error) {
 	pc := 0
 	for {
-		offset := Execute(program, pc)
-		if offset == 99 {
-			break
+		offset, err := Execute(program, pc)
+		if err != nil {
+			return nil, err
+		}
+		if offset == EndOfProgram {
+			return program, nil
 		}
 		pc += offset
 	}
-	return program
 }
 
 // Initialize initializes an intcode program for running
-func Initialize(puzzleInput string, noun, verb int) []int {
-	intcode := Load(puzzleInput)
-	intcode[1] = noun
-	intcode[2] = verb
-	return intcode
+func Initialize(puzzleInput string, noun, verb int) ([]int, error) {
+	program, err := Load(puzzleInput)
+	if err != nil {
+		return nil, err
+	}
+	program[1] = noun
+	program[2] = verb
+	return program, nil
 }
