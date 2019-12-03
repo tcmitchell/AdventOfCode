@@ -50,14 +50,33 @@ func runProgram(intcode []int) []int {
 	return intcode
 }
 
-func part1(puzzleInput string) {
+func initializeProgram(puzzleInput string, noun, verb int) []int {
 	intcode := loadIntCode(puzzleInput)
-	intcode[1] = 12
-	intcode[2] = 2
+	intcode[1] = noun
+	intcode[2] = verb
 	intcode = runProgram(intcode)
-	fmt.Printf("%d\n", intcode)
+	// fmt.Printf("%d\n", intcode)
+	return intcode
+}
+
+func part1(puzzleInput string) {
+	intcode := initializeProgram(puzzleInput, 12, 2)
+	fmt.Printf("Part1: %d\n", intcode[0])
+}
+
+func part2(puzzleInput string) {
+	for noun := 0; noun < 100; noun++ {
+		for verb := 0; verb < 100; verb++ {
+			result := initializeProgram(puzzleInput, noun, verb)
+			if result[0] == 19690720 {
+				fmt.Printf("Part2: %d (noun = %d; verb = %d)\n",
+					100*noun+verb, noun, verb)
+			}
+		}
+	}
 }
 
 func main() {
 	part1("input.txt")
+	part2("input.txt")
 }
