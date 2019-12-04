@@ -12,30 +12,38 @@ const HORIZONTAL string = "H"
 type Segment struct {
 	x1, y1, x2, y2 int
 	direction      string
+	steps          int
+	reversed       bool
 }
 
 // NewSegment creates a line segment
 func NewSegment(x1, y1, x2, y2 int) (*Segment, error) {
 	var dir string
+	var steps int
+	reversed := false
 	if x1 == x2 {
 		dir = VERTICAL
 		if y2 < y1 {
 			y1, y2 = y2, y1
+			reversed = true
 		}
+		steps = y2 - y1
 	} else if y1 == y2 {
 		dir = HORIZONTAL
 		if x2 < x1 {
 			x1, x2 = x2, x1
+			reversed = true
 		}
+		steps = x2 - x1
 	} else {
 		return nil, fmt.Errorf("Segment is not H or V")
 	}
-	return &Segment{x1, y1, x2, y2, dir}, nil
+	return &Segment{x1, y1, x2, y2, dir, steps, reversed}, nil
 }
 
 func (seg *Segment) String() string {
-	return fmt.Sprintf("Seg(%s:%d,%d - %d,%d)",
-		seg.direction, seg.x1, seg.y1, seg.x2, seg.y2)
+	return fmt.Sprintf("Seg(%s|%d:%d,%d - %d,%d)",
+		seg.direction, seg.steps, seg.x1, seg.y1, seg.x2, seg.y2)
 }
 
 func (seg *Segment) intersects(other *Segment) (bool, int, int) {
