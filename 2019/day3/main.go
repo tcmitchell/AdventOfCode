@@ -90,16 +90,16 @@ func part1(puzzleInput string) error {
 		for _, seg1 := range path1 {
 			foo, x, y := seg1.intersects(seg2)
 			if foo {
-				fmt.Printf("%s intersects %s\n", seg2, seg1)
+				// fmt.Printf("%s intersects %s\n", seg2, seg1)
 				md := AbsInt(x) + AbsInt(y)
-				fmt.Printf("Manhattan distance is %d\n", md)
+				// fmt.Printf("Manhattan distance is %d\n", md)
 				if md < closest {
 					closest = md
 				}
 			}
 		}
 	}
-	fmt.Printf("Part 1: %d", closest)
+	fmt.Printf("Part 1: %d\n", closest)
 	return nil
 }
 
@@ -123,9 +123,9 @@ func part2(puzzleInput string) error {
 		for _, seg1 := range path1 {
 			foo, x, y := seg1.intersects(seg2)
 			if foo {
-				fmt.Printf("%s intersects %s\n", seg2, seg1)
-				md := AbsInt(x) + AbsInt(y)
-				fmt.Printf("Manhattan distance is %d\n", md)
+				// fmt.Printf("%s intersects %s\n", seg2, seg1)
+				// md := AbsInt(x) + AbsInt(y)
+				// fmt.Printf("Manhattan distance is %d\n", md)
 				isteps1, isteps2 := 0, 0
 				switch seg1.direction {
 				case "H":
@@ -151,7 +151,7 @@ func part2(puzzleInput string) error {
 						isteps2 = steps2 + AbsInt(x-seg2.x1)
 					}
 				}
-				fmt.Printf("steps1: %d; steps2: %d\n", isteps1, isteps2)
+				// fmt.Printf("steps1: %d; steps2: %d\n", isteps1, isteps2)
 				totSteps := isteps1 + isteps2
 				if totSteps < closest {
 					closest = totSteps
@@ -166,9 +166,9 @@ func part2(puzzleInput string) error {
 }
 
 func main() {
-	// err := part1("input.txt")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err := part1("input.txt")
+	if err != nil {
+		panic(err)
+	}
 	part2("input.txt")
 }
