@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -28,8 +29,11 @@ const EndOfProgram = -1
 // that holds the input reader, output writer, and the
 // instruction pointer (pc)
 
-// Input reader for any programs
-var Input io.Reader
+// Input reader for the input opcode
+var Input io.Reader = os.Stdin
+
+// Output writer for the output opcode
+var Output io.Writer = os.Stdout
 
 // paramMode figures out the paramater mode for the given
 // parameter from the instruction.

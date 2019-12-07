@@ -45,7 +45,7 @@ func doOutput(program Program, pc int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(param)
+	fmt.Fprintln(Output, param)
 	return pc + 2, nil
 }
 

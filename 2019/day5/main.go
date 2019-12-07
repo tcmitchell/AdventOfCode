@@ -28,12 +28,13 @@ func part2(puzzleInput string) error {
 		return err
 	}
 	intcode.Input = strings.NewReader("5\n")
-	fmt.Println("----- Begin Part 2 -----")
+	var output strings.Builder
+	intcode.Output = &output
 	program, err = intcode.Run(program)
 	if err != nil {
 		return err
 	}
-	fmt.Println("----- End Part 2 -----")
+	fmt.Printf("Part 2: %s", output.String())
 	return nil
 }
 
