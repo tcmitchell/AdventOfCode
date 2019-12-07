@@ -2,6 +2,7 @@ package intcode
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -10,12 +11,21 @@ import (
 // Program is a series of intcode instructions and parameters
 type Program []int
 
-var opcodeAdd = 1
-var opcodeMultiply = 2
-var opcodeEnd = 99
+const opcodeAdd = 1
+const opcodeMultiply = 2
+const opcodeInput = 3
+const opcodeOutput = 4
+const opcodeEnd = 99
 
 // EndOfProgram indicates the program is complete
-var EndOfProgram = 99
+const EndOfProgram = 99
+
+// TODO: We should really have an interpreter struct
+// that holds the input reader, output writer, and the
+// instruction pointer (pc)
+
+// Input reader for any programs
+var Input io.Reader
 
 // paramMode figures out the paramater mode for the given
 // parameter from the instruction.
@@ -76,6 +86,27 @@ func doMultiply(program Program, pc int) (int, error) {
 	return 4, nil
 }
 
+func doInput(program Program, pc int) (int, error) {
+	// Read from Input, and store in the parameter location
+	var i int
+	_, err := fmt.Fscanf(Input, "%d", &i)
+	if err != nil {
+		return 0, err
+	}
+	program[program[pc+1]] = i
+	return 2, nil
+}
+
+func doOutput(program Program, pc int) (int, error) {
+	// Write to stdout
+	param, err := getParameter(program, pc, 1)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println(param)
+	return 2, nil
+}
+
 // Execute a single opcode of an Intcode program
 func Execute(program Program, pc int) (int, error) {
 	switch opcode(program[pc]) {
@@ -83,6 +114,10 @@ func Execute(program Program, pc int) (int, error) {
 		return doAdd(program, pc)
 	case opcodeMultiply:
 		return doMultiply(program, pc)
+	case opcodeInput:
+		return doInput(program, pc)
+	case opcodeOutput:
+		return doOutput(program, pc)
 	case opcodeEnd:
 		return EndOfProgram, nil
 	default:
