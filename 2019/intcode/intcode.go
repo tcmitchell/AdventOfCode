@@ -15,10 +15,14 @@ const opcodeAdd = 1
 const opcodeMultiply = 2
 const opcodeInput = 3
 const opcodeOutput = 4
+const opcodeJumpIfTrue = 5
+const opcodeJumpIfFalse = 6
+const opcodeLessThan = 7
+const opcodeEquals = 8
 const opcodeEnd = 99
 
 // EndOfProgram indicates the program is complete
-const EndOfProgram = 99
+const EndOfProgram = -1
 
 // TODO: We should really have an interpreter struct
 // that holds the input reader, output writer, and the
@@ -60,53 +64,6 @@ func getParameter(program Program, pc int, param int) (int, error) {
 	}
 }
 
-func doAdd(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
-	if err != nil {
-		return 0, err
-	}
-	b, err := getParameter(program, pc, 2)
-	if err != nil {
-		return 0, err
-	}
-	program[program[pc+3]] = a + b
-	return 4, nil
-}
-
-func doMultiply(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
-	if err != nil {
-		return 0, err
-	}
-	b, err := getParameter(program, pc, 2)
-	if err != nil {
-		return 0, err
-	}
-	program[program[pc+3]] = a * b
-	return 4, nil
-}
-
-func doInput(program Program, pc int) (int, error) {
-	// Read from Input, and store in the parameter location
-	var i int
-	_, err := fmt.Fscanf(Input, "%d", &i)
-	if err != nil {
-		return 0, err
-	}
-	program[program[pc+1]] = i
-	return 2, nil
-}
-
-func doOutput(program Program, pc int) (int, error) {
-	// Write to stdout
-	param, err := getParameter(program, pc, 1)
-	if err != nil {
-		return 0, err
-	}
-	fmt.Println(param)
-	return 2, nil
-}
-
 // Execute a single opcode of an Intcode program
 func Execute(program Program, pc int) (int, error) {
 	switch opcode(program[pc]) {
@@ -118,6 +75,14 @@ func Execute(program Program, pc int) (int, error) {
 		return doInput(program, pc)
 	case opcodeOutput:
 		return doOutput(program, pc)
+	case opcodeJumpIfTrue:
+		return doJumpIfTrue(program, pc)
+	case opcodeJumpIfFalse:
+		return doJumpIfFalse(program, pc)
+	case opcodeLessThan:
+		return doLessThan(program, pc)
+	case opcodeEquals:
+		return doEquals(program, pc)
 	case opcodeEnd:
 		return EndOfProgram, nil
 	default:
@@ -151,16 +116,16 @@ func Load(filename string) (Program, error) {
 
 // Run executes an intcode program
 func Run(program Program) (Program, error) {
+	var err error
 	pc := 0
 	for {
-		offset, err := Execute(program, pc)
+		pc, err = Execute(program, pc)
 		if err != nil {
 			return nil, err
 		}
-		if offset == EndOfProgram {
+		if pc == EndOfProgram {
 			return program, nil
 		}
-		pc += offset
 	}
 }
 
