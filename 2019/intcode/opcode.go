@@ -31,7 +31,7 @@ func doMultiply(program Program, pc int) (int, error) {
 func doInput(program Program, pc int) (int, error) {
 	// Read from Input, and store in the parameter location
 	var i int
-	_, err := fmt.Fscanf(Input, "%d", &i)
+	_, err := fmt.Fscanf(Input, "%d\n", &i)
 	if err != nil {
 		return 0, err
 	}
