@@ -11,7 +11,7 @@ func part1(puzzleInput string) {
 	if err != nil {
 		panic(err)
 	}
-	program, err = intcode.Run(program)
+	program, err = intcode.Run(program, nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func part2(puzzleInput string) {
 			if err != nil {
 				panic(err)
 			}
-			result, err := intcode.Run(program)
+			result, err := intcode.Run(program, nil, nil)
 			if err != nil {
 				panic(err)
 			}

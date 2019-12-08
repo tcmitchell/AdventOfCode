@@ -1,7 +1,5 @@
 package intcode
 
-import "fmt"
-
 func doAdd(program Program, pc int) (int, error) {
 	a, err := getParameter(program, pc, 1)
 	if err != nil {
@@ -28,24 +26,19 @@ func doMultiply(program Program, pc int) (int, error) {
 	return pc + 4, nil
 }
 
-func doInput(program Program, pc int) (int, error) {
-	// Read from Input, and store in the parameter location
-	var i int
-	_, err := fmt.Fscanf(Input, "%d\n", &i)
-	if err != nil {
-		return 0, err
-	}
-	program[program[pc+1]] = i
+func doInput(program Program, pc int, inc chan int) (int, error) {
+	// Read from the input channel, store in the parameter location
+	program[program[pc+1]] = <-inc
 	return pc + 2, nil
 }
 
-func doOutput(program Program, pc int) (int, error) {
-	// Write to stdout
+func doOutput(program Program, pc int, outc chan int) (int, error) {
+	// Write to the output channel
 	param, err := getParameter(program, pc, 1)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Fprintln(Output, param)
+	outc <- param
 	return pc + 2, nil
 }
 

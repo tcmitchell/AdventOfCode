@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/tcmitchell/AdventOfCode/2019/intcode"
 )
@@ -12,11 +11,17 @@ func part1(puzzleInput string) error {
 	if err != nil {
 		return err
 	}
-	intcode.Input = strings.NewReader("1\n")
+	inc := make(chan int, 1)
+	inc <- 1
+	outc := make(chan int, 25)
 	fmt.Println("----- Begin Part 1 -----")
-	program, err = intcode.Run(program)
+	program, err = intcode.Run(program, inc, outc)
+	close(inc)
 	if err != nil {
 		return err
+	}
+	for out := range outc {
+		fmt.Println(out)
 	}
 	fmt.Println("----- End Part 1 -----")
 	return nil
@@ -27,14 +32,15 @@ func part2(puzzleInput string) error {
 	if err != nil {
 		return err
 	}
-	intcode.Input = strings.NewReader("5\n")
-	var output strings.Builder
-	intcode.Output = &output
-	program, err = intcode.Run(program)
+	inc := make(chan int, 1)
+	inc <- 5
+	outc := make(chan int, 25)
+	program, err = intcode.Run(program, inc, outc)
+	close(inc)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Part 2: %s", output.String())
+	fmt.Printf("Part 2: %d\n", <-outc)
 	return nil
 }
 

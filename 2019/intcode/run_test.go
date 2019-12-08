@@ -22,7 +22,7 @@ func programEqual(a, b []int) bool {
 func TestRunProgram1(t *testing.T) {
 	program := []int{1, 0, 0, 0, 99}
 	expected := []int{2, 0, 0, 0, 99}
-	got, err := Run(program)
+	got, err := Run(program, nil, nil)
 	if err != nil {
 		t.Error(err)
 		return
@@ -36,7 +36,7 @@ func TestRunProgram1(t *testing.T) {
 func TestRunProgram2(t *testing.T) {
 	program := []int{2, 3, 0, 3, 99}
 	expected := []int{2, 3, 0, 6, 99}
-	got, err := Run(program)
+	got, err := Run(program, nil, nil)
 	if err != nil {
 		t.Error(err)
 		return
@@ -50,7 +50,7 @@ func TestRunProgram2(t *testing.T) {
 func TestRunProgram3(t *testing.T) {
 	program := []int{2, 4, 4, 5, 99, 0}
 	expected := []int{2, 4, 4, 5, 99, 9801}
-	got, err := Run(program)
+	got, err := Run(program, nil, nil)
 	if err != nil {
 		t.Error(err)
 		return
@@ -64,7 +64,7 @@ func TestRunProgram3(t *testing.T) {
 func TestRunProgram4(t *testing.T) {
 	program := []int{1, 1, 1, 4, 99, 5, 6, 0, 99}
 	expected := []int{30, 1, 1, 4, 2, 5, 6, 0, 99}
-	got, err := Run(program)
+	got, err := Run(program, nil, nil)
 	if err != nil {
 		t.Error(err)
 		return

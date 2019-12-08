@@ -25,28 +25,33 @@ func permutation(xs []int) (permuts [][]int) {
 	return permuts
 }
 
-func runAmplifier(progFile string, phase int, input string) (string, error) {
+func runAmplifier(progFile string, phase int, input int) (int, error) {
 	program, err := intcode.Load(progFile)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
+	inc := make(chan int, 2)
+	inc <- phase
+	inc <- input
+	outc := make(chan int, 1)
 	progInput := fmt.Sprintf("%d\n%s", phase, input)
 	intcode.Input = strings.NewReader(progInput)
 	var output strings.Builder
 	intcode.Output = &output
-	program, err = intcode.Run(program)
+	program, err = intcode.Run(program, inc, outc)
+	close(inc)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	return output.String(), nil
+	return <-outc, nil
 }
 
-func runConfig(progFile string, phases []int) (string, error) {
-	input := "0\n"
+func runConfig(progFile string, phases []int) (int, error) {
+	input := 0
 	for _, phase := range phases {
 		output, err := runAmplifier(progFile, phase, input)
 		if err != nil {
-			return "", err
+			return 0, err
 		}
 		input = output
 	}
@@ -55,14 +60,12 @@ func runConfig(progFile string, phases []int) (string, error) {
 
 func part1(puzzleInput string) error {
 	phases := []int{0, 1, 2, 3, 4}
-	signal := 0
 	maxSignal := 0
 	for _, p := range permutation(phases) {
-		result, err := runConfig(puzzleInput, p)
+		signal, err := runConfig(puzzleInput, p)
 		if err != nil {
 			return err
 		}
-		fmt.Sscanf(result, "%d", &signal)
 		fmt.Printf("%d: %d\n", p, signal)
 		if signal > maxSignal {
 			maxSignal = signal

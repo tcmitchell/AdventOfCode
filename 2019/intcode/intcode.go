@@ -69,16 +69,16 @@ func getParameter(program Program, pc int, param int) (int, error) {
 }
 
 // Execute a single opcode of an Intcode program
-func Execute(program Program, pc int) (int, error) {
+func Execute(program Program, pc int, inc chan int, outc chan int) (int, error) {
 	switch opcode(program[pc]) {
 	case opcodeAdd:
 		return doAdd(program, pc)
 	case opcodeMultiply:
 		return doMultiply(program, pc)
 	case opcodeInput:
-		return doInput(program, pc)
+		return doInput(program, pc, inc)
 	case opcodeOutput:
-		return doOutput(program, pc)
+		return doOutput(program, pc, outc)
 	case opcodeJumpIfTrue:
 		return doJumpIfTrue(program, pc)
 	case opcodeJumpIfFalse:
@@ -119,15 +119,18 @@ func Load(filename string) (Program, error) {
 }
 
 // Run executes an intcode program
-func Run(program Program) (Program, error) {
+func Run(program Program, inc chan int, outc chan int) (Program, error) {
 	var err error
 	pc := 0
 	for {
-		pc, err = Execute(program, pc)
+		pc, err = Execute(program, pc, inc, outc)
 		if err != nil {
 			return nil, err
 		}
 		if pc == EndOfProgram {
+			if outc != nil {
+				close(outc)
+			}
 			return program, nil
 		}
 	}
