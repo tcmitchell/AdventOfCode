@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/tcmitchell/AdventOfCode/2019/intcode"
 )
@@ -26,19 +25,12 @@ func permutation(xs []int) (permuts [][]int) {
 }
 
 func runAmplifier(progFile string, phase int, input int) (int, error) {
-	program, err := intcode.Load(progFile)
-	if err != nil {
-		return 0, err
-	}
 	inc := make(chan int, 2)
 	inc <- phase
 	inc <- input
 	outc := make(chan int, 1)
-	progInput := fmt.Sprintf("%d\n%s", phase, input)
-	intcode.Input = strings.NewReader(progInput)
-	var output strings.Builder
-	intcode.Output = &output
-	program, err = intcode.Run(program, inc, outc)
+	i, err := intcode.NewInterpreter(progFile, inc, outc)
+	i.Run()
 	close(inc)
 	if err != nil {
 		return 0, err

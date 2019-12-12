@@ -2,9 +2,7 @@ package intcode
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -28,12 +26,6 @@ const EndOfProgram = -1
 // TODO: We should really have an interpreter struct
 // that holds the input reader, output writer, and the
 // instruction pointer (pc)
-
-// Input reader for the input opcode
-var Input io.Reader = os.Stdin
-
-// Output writer for the output opcode
-var Output io.Writer = os.Stdout
 
 // paramMode figures out the paramater mode for the given
 // parameter from the instruction.
