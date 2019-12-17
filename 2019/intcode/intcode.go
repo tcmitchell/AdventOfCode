@@ -98,7 +98,6 @@ func loadString(prog string) (Program, error) {
 		}
 	}
 	return program, nil
-
 }
 
 // Load an intcode program from file

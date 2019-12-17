@@ -1,5 +1,7 @@
 package intcode
 
+import "fmt"
+
 func doAdd(program Program, pc int) (int, error) {
 	a, err := getParameter(program, pc, 1)
 	if err != nil {
@@ -29,6 +31,7 @@ func doMultiply(program Program, pc int) (int, error) {
 func doInput(program Program, pc int, inc chan int) (int, error) {
 	// Read from the input channel, store in the parameter location
 	program[program[pc+1]] = <-inc
+	fmt.Printf("Input: %d\n", program[program[pc+1]])
 	return pc + 2, nil
 }
 
@@ -38,6 +41,7 @@ func doOutput(program Program, pc int, outc chan int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	fmt.Printf("Output: %d\n", param)
 	outc <- param
 	return pc + 2, nil
 }
