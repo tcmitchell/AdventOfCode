@@ -8,9 +8,10 @@ import (
 type Interpreter struct {
 	program Program  // An intcode program
 	ip      int      // The instruction pointer
+	relBase int      // The relative parameter base
 	input   chan int // The input channel
 	output  chan int // The output channel
-	name    string
+	name    string   // The name of this interpreter for debugging
 }
 
 // NewInterpreter creates a new intcode interpreter
@@ -41,7 +42,7 @@ func (i *Interpreter) Load(filename string) error {
 func (i *Interpreter) Run() error {
 	var err error
 	for {
-		log.Printf("%s executing instruction pointer %d\n", i.name, i.ip)
+		// log.Printf("%s executing instruction pointer %d\n", i.name, i.ip)
 		i.ip, err = Execute(i)
 		if err != nil {
 			return err

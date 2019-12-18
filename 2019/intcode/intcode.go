@@ -18,6 +18,7 @@ const opcodeJumpIfTrue = 5
 const opcodeJumpIfFalse = 6
 const opcodeLessThan = 7
 const opcodeEquals = 8
+const opcodeAdjRelBase = 9
 const opcodeEnd = 99
 
 // EndOfProgram indicates the program is complete
@@ -37,6 +38,26 @@ func paramMode(instruction int, param int) int {
 	return params % 10
 }
 
+// paramLoc gets the index in the program where the parameter is located.
+func paramLoc(i *Interpreter, param int) (int, error) {
+	mode := paramMode(i.program[i.ip], param)
+	switch mode {
+	case 0:
+		// position mode
+		return i.program[i.ip+param], nil
+	case 1:
+		// immediate mode
+		return i.ip + param, nil
+	case 2:
+		// relative mode
+		return i.program[i.ip+param] + i.relBase, nil
+	default:
+		// Should return an error here
+		return 0, fmt.Errorf("Illegal parameter mode %d", mode)
+	}
+
+}
+
 // opcode gets the opcode from the instruction.
 // opcode is the rightmost two digits.
 func opcode(instruction int) int {
@@ -46,21 +67,11 @@ func opcode(instruction int) int {
 // getParameter gets the given parameter taking into account
 // the parameter mode.
 func getParameter(i *Interpreter, param int) (int, error) {
-	mode := paramMode(i.program[i.ip], param)
-	switch mode {
-	case 0:
-		// position mode
-		return i.program[i.program[i.ip+param]], nil
-	case 1:
-		// immediate mode
-		return i.program[i.ip+param], nil
-	case 2:
-		// relative mode
-		return i.program[i.ip+param], nil
-	default:
-		// Should return an error here
-		return 0, fmt.Errorf("Illegal parameter mode %d", mode)
+	loc, err := paramLoc(i, param)
+	if err != nil {
+		return 0, err
 	}
+	return i.program[loc], nil
 }
 
 // Execute a single opcode of an Intcode program
@@ -82,6 +93,8 @@ func Execute(i *Interpreter) (int, error) {
 		return doLessThan(i)
 	case opcodeEquals:
 		return doEquals(i)
+	case opcodeAdjRelBase:
+		return doAdjustRelativeBase(i)
 	case opcodeEnd:
 		return EndOfProgram, nil
 	default:
@@ -92,7 +105,8 @@ func Execute(i *Interpreter) (int, error) {
 func loadString(prog string) (Program, error) {
 	rawCode := strings.TrimSpace(prog)
 	strcode := strings.Split(rawCode, ",")
-	program := make(Program, len(strcode))
+	// program := make(Program, len(strcode))
+	program := make(Program, 5000)
 	var err error
 	for i, s := range strcode {
 		program[i], err = strconv.Atoi(s)
