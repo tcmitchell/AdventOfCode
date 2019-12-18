@@ -1,10 +1,5 @@
 package intcode
 
-import (
-	"fmt"
-	"log"
-)
-
 func doAdd(i *Interpreter) (int, error) {
 	a, err := getParameter(i, 1)
 	if err != nil {
@@ -46,7 +41,7 @@ func doInput(i *Interpreter) (int, error) {
 		return 0, err
 	}
 	i.program[loc] = <-i.input
-	fmt.Printf("Input: %d\n", i.program[loc])
+	// log.Printf("Input: %d\n", i.program[loc])
 	return i.ip + 2, nil
 }
 
@@ -56,7 +51,7 @@ func doOutput(i *Interpreter) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	fmt.Printf("Output: %d\n", param)
+	// log.Printf("Output: %d\n", param)
 	i.output <- param
 	return i.ip + 2, nil
 }
@@ -140,8 +135,8 @@ func doAdjustRelativeBase(i *Interpreter) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	oldBase := i.relBase
+	// oldBase := i.relBase
 	i.relBase += a
-	log.Printf("Adjusted relative base from %d to %d\n", oldBase, i.relBase)
+	// log.Printf("Adjusted relative base from %d to %d\n", oldBase, i.relBase)
 	return i.ip + 2, nil
 }

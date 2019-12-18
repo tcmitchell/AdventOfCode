@@ -53,7 +53,7 @@ func (i *Interpreter) Run() error {
 		}
 		if i.ip == EndOfProgram {
 			if i.output != nil {
-				log.Printf("%s closing output channel\n", i.name)
+				// log.Printf("%s closing output channel\n", i.name)
 				close(i.output)
 			}
 			return nil

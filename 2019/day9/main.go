@@ -20,7 +20,7 @@ func part1(puzzleInput string) error {
 		return err
 	}
 	for out := range outc {
-		fmt.Println(out)
+		fmt.Printf("Part 1: %d\n", out)
 	}
 	return nil
 }
