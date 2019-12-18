@@ -45,15 +45,18 @@ func opcode(instruction int) int {
 
 // getParameter gets the given parameter taking into account
 // the parameter mode.
-func getParameter(program Program, pc int, param int) (int, error) {
-	mode := paramMode(program[pc], param)
+func getParameter(i *Interpreter, param int) (int, error) {
+	mode := paramMode(i.program[i.ip], param)
 	switch mode {
 	case 0:
 		// position mode
-		return program[program[pc+param]], nil
+		return i.program[i.program[i.ip+param]], nil
 	case 1:
 		// immediate mode
-		return program[pc+param], nil
+		return i.program[i.ip+param], nil
+	case 2:
+		// relative mode
+		return i.program[i.ip+param], nil
 	default:
 		// Should return an error here
 		return 0, fmt.Errorf("Illegal parameter mode %d", mode)
@@ -61,28 +64,28 @@ func getParameter(program Program, pc int, param int) (int, error) {
 }
 
 // Execute a single opcode of an Intcode program
-func Execute(program Program, pc int, inc chan int, outc chan int) (int, error) {
-	switch opcode(program[pc]) {
+func Execute(i *Interpreter) (int, error) {
+	switch opcode(i.program[i.ip]) {
 	case opcodeAdd:
-		return doAdd(program, pc)
+		return doAdd(i)
 	case opcodeMultiply:
-		return doMultiply(program, pc)
+		return doMultiply(i)
 	case opcodeInput:
-		return doInput(program, pc, inc)
+		return doInput(i)
 	case opcodeOutput:
-		return doOutput(program, pc, outc)
+		return doOutput(i)
 	case opcodeJumpIfTrue:
-		return doJumpIfTrue(program, pc)
+		return doJumpIfTrue(i)
 	case opcodeJumpIfFalse:
-		return doJumpIfFalse(program, pc)
+		return doJumpIfFalse(i)
 	case opcodeLessThan:
-		return doLessThan(program, pc)
+		return doLessThan(i)
 	case opcodeEquals:
-		return doEquals(program, pc)
+		return doEquals(i)
 	case opcodeEnd:
 		return EndOfProgram, nil
 	default:
-		return 0, fmt.Errorf("Unknown opcode %d", opcode(program[pc]))
+		return 0, fmt.Errorf("Unknown opcode %d", opcode(i.program[i.ip]))
 	}
 }
 
@@ -110,20 +113,21 @@ func Load(filename string) (Program, error) {
 }
 
 // Run executes an intcode program
-func Run(program Program, inc chan int, outc chan int) (Program, error) {
+func Run(i *Interpreter) (Program, error) {
 	var err error
 	pc := 0
 	for {
-		pc, err = Execute(program, pc, inc, outc)
+		pc, err = Execute(i)
 		if err != nil {
 			return nil, err
 		}
 		if pc == EndOfProgram {
-			if outc != nil {
-				close(outc)
+			if i.output != nil {
+				close(i.output)
 			}
-			return program, nil
+			return i.program, nil
 		}
+		i.ip = pc
 	}
 }
 

@@ -42,7 +42,7 @@ func (i *Interpreter) Run() error {
 	var err error
 	for {
 		log.Printf("%s executing instruction pointer %d\n", i.name, i.ip)
-		i.ip, err = Execute(i.program, i.ip, i.input, i.output)
+		i.ip, err = Execute(i)
 		if err != nil {
 			return err
 		}

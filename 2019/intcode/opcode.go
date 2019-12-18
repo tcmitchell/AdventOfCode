@@ -2,88 +2,88 @@ package intcode
 
 import "fmt"
 
-func doAdd(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
+func doAdd(i *Interpreter) (int, error) {
+	a, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
-	b, err := getParameter(program, pc, 2)
+	b, err := getParameter(i, 2)
 	if err != nil {
 		return 0, err
 	}
-	program[program[pc+3]] = a + b
-	return pc + 4, nil
+	i.program[i.program[i.ip+3]] = a + b
+	return i.ip + 4, nil
 }
 
-func doMultiply(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
+func doMultiply(i *Interpreter) (int, error) {
+	a, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
-	b, err := getParameter(program, pc, 2)
+	b, err := getParameter(i, 2)
 	if err != nil {
 		return 0, err
 	}
-	program[program[pc+3]] = a * b
-	return pc + 4, nil
+	i.program[i.program[i.ip+3]] = a * b
+	return i.ip + 4, nil
 }
 
-func doInput(program Program, pc int, inc chan int) (int, error) {
+func doInput(i *Interpreter) (int, error) {
 	// Read from the input channel, store in the parameter location
-	program[program[pc+1]] = <-inc
-	fmt.Printf("Input: %d\n", program[program[pc+1]])
-	return pc + 2, nil
+	i.program[i.program[i.ip+1]] = <-i.input
+	fmt.Printf("Input: %d\n", i.program[i.program[i.ip+1]])
+	return i.ip + 2, nil
 }
 
-func doOutput(program Program, pc int, outc chan int) (int, error) {
+func doOutput(i *Interpreter) (int, error) {
 	// Write to the output channel
-	param, err := getParameter(program, pc, 1)
+	param, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
 	fmt.Printf("Output: %d\n", param)
-	outc <- param
-	return pc + 2, nil
+	i.output <- param
+	return i.ip + 2, nil
 }
 
-func doJumpIfTrue(program Program, pc int) (int, error) {
+func doJumpIfTrue(i *Interpreter) (int, error) {
 	// Write to stdout
-	param, err := getParameter(program, pc, 1)
+	param, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
 	if param != 0 {
-		newPc, err := getParameter(program, pc, 2)
+		newPc, err := getParameter(i, 2)
 		if err != nil {
 			return 0, err
 		}
 		return newPc, nil
 	}
-	return pc + 3, nil
+	return i.ip + 3, nil
 }
 
-func doJumpIfFalse(program Program, pc int) (int, error) {
+func doJumpIfFalse(i *Interpreter) (int, error) {
 	// Write to stdout
-	param, err := getParameter(program, pc, 1)
+	param, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
 	if param == 0 {
-		newPc, err := getParameter(program, pc, 2)
+		newPc, err := getParameter(i, 2)
 		if err != nil {
 			return 0, err
 		}
 		return newPc, nil
 	}
-	return pc + 3, nil
+	return i.ip + 3, nil
 }
 
-func doLessThan(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
+func doLessThan(i *Interpreter) (int, error) {
+	a, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
-	b, err := getParameter(program, pc, 2)
+	b, err := getParameter(i, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -91,16 +91,16 @@ func doLessThan(program Program, pc int) (int, error) {
 	if a < b {
 		val = 1
 	}
-	program[program[pc+3]] = val
-	return pc + 4, nil
+	i.program[i.program[i.ip+3]] = val
+	return i.ip + 4, nil
 }
 
-func doEquals(program Program, pc int) (int, error) {
-	a, err := getParameter(program, pc, 1)
+func doEquals(i *Interpreter) (int, error) {
+	a, err := getParameter(i, 1)
 	if err != nil {
 		return 0, err
 	}
-	b, err := getParameter(program, pc, 2)
+	b, err := getParameter(i, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -108,6 +108,6 @@ func doEquals(program Program, pc int) (int, error) {
 	if a == b {
 		val = 1
 	}
-	program[program[pc+3]] = val
-	return pc + 4, nil
+	i.program[i.program[i.ip+3]] = val
+	return i.ip + 4, nil
 }

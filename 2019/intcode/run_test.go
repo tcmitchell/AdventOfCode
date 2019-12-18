@@ -21,8 +21,9 @@ func programEqual(a, b []int) bool {
 // 1,0,0,0,99 becomes 2,0,0,0,99 (1 + 1 = 2).
 func TestRunProgram1(t *testing.T) {
 	program := []int{1, 0, 0, 0, 99}
+	i := Interpreter{program: program}
 	expected := []int{2, 0, 0, 0, 99}
-	got, err := Run(program, nil, nil)
+	got, err := Run(&i)
 	if err != nil {
 		t.Error(err)
 		return
@@ -35,8 +36,9 @@ func TestRunProgram1(t *testing.T) {
 // 2,3,0,3,99 becomes 2,3,0,6,99 (3 * 2 = 6).
 func TestRunProgram2(t *testing.T) {
 	program := []int{2, 3, 0, 3, 99}
+	i := Interpreter{program: program}
 	expected := []int{2, 3, 0, 6, 99}
-	got, err := Run(program, nil, nil)
+	got, err := Run(&i)
 	if err != nil {
 		t.Error(err)
 		return
@@ -49,8 +51,9 @@ func TestRunProgram2(t *testing.T) {
 // 2,4,4,5,99,0 becomes 2,4,4,5,99,9801 (99 * 99 = 9801).
 func TestRunProgram3(t *testing.T) {
 	program := []int{2, 4, 4, 5, 99, 0}
+	i := Interpreter{program: program}
 	expected := []int{2, 4, 4, 5, 99, 9801}
-	got, err := Run(program, nil, nil)
+	got, err := Run(&i)
 	if err != nil {
 		t.Error(err)
 		return
@@ -63,8 +66,9 @@ func TestRunProgram3(t *testing.T) {
 // 1,1,1,4,99,5,6,0,99 becomes 30,1,1,4,2,5,6,0,99.
 func TestRunProgram4(t *testing.T) {
 	program := []int{1, 1, 1, 4, 99, 5, 6, 0, 99}
+	i := Interpreter{program: program}
 	expected := []int{30, 1, 1, 4, 2, 5, 6, 0, 99}
-	got, err := Run(program, nil, nil)
+	got, err := Run(&i)
 	if err != nil {
 		t.Error(err)
 		return
