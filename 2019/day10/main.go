@@ -127,6 +127,11 @@ func part1(puzzleInput string) error {
 }
 
 func part2(puzzleInput string) error {
+	aMap, err := loadAsteroidMap(puzzleInput)
+	if err != nil {
+		return err
+	}
+	fmt.Print(aMap)
 	answer := 0
 	fmt.Printf("Part 2: %d\n", answer)
 	return nil
