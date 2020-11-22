@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"strings"
 )
@@ -96,12 +97,7 @@ func lineOfSight(a1, a2 *asteroid, aMap *asteroidMap) bool {
 	return true
 }
 
-func part1(puzzleInput string) error {
-	aMap, err := loadAsteroidMap(puzzleInput)
-	if err != nil {
-		return err
-	}
-	// fmt.Print(aMap)
+func part1(aMap *asteroidMap) (*asteroid, int, error) {
 	var losCount int
 	var losAsteroid *asteroid
 	for _, roid1 := range aMap.asteroids {
@@ -122,28 +118,31 @@ func part1(puzzleInput string) error {
 			losAsteroid = roid1
 		}
 	}
-	fmt.Printf("Part 1: %d from %s\n", losCount, losAsteroid)
-	return nil
+	//fmt.Printf("Part 1: %d from %s\n", losCount, losAsteroid)
+	return losAsteroid, losCount, nil
 }
 
-func part2(puzzleInput string) error {
-	aMap, err := loadAsteroidMap(puzzleInput)
-	if err != nil {
-		return err
-	}
-	fmt.Print(aMap)
+func part2(_ *asteroidMap, _ *asteroid) error {
+	//fmt.Print(aMap)
 	answer := 0
 	fmt.Printf("Part 2: %d\n", answer)
 	return nil
 }
 
 func main() {
-	err := part1("input.txt")
+	puzzleInput := "input.txt"
+	aMap, err := loadAsteroidMap(puzzleInput)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	err = part2("input.txt")
+	// fmt.Print(aMap)
+	losAsteroid, losCount, err := part1(aMap)
+	fmt.Printf("Part 1: %d\n", losCount)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	err = part2(aMap, losAsteroid)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
