@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -12,6 +13,15 @@ import (
 // angle measured in degrees.
 func rads2degs(rads float64) float64 {
 	return rads * 180.0 / math.Pi
+}
+
+var EPSILON float64 = 0.00000001
+
+func floatEquals(a, b float64) bool {
+	if (a-b) < EPSILON && (b-a) < EPSILON {
+		return true
+	}
+	return false
 }
 
 type asteroid struct {
@@ -170,15 +180,86 @@ func part1(aMap *asteroidMap) (*asteroid, int, error) {
 	return losAsteroid, losCount, nil
 }
 
-func part2(_ *asteroidMap, _ *asteroid) error {
+func p2ComputeAngleAndDistance(mStation *asteroid, aMap *asteroidMap) {
+	for _, roid1 := range aMap.asteroids {
+		if roid1.x == mStation.x && roid1.y == mStation.y {
+			// Skip the monitoring station
+			continue
+		}
+		roid1.angle = mStation.angle2asteroid(roid1)
+		roid1.distance = mStation.dist2asteroid(roid1)
+	}
+}
+
+func p2InsertMatchingAngle(result [][]*asteroid, roid1 *asteroid) bool {
+	for idx, list := range result {
+		//if len(list) > 0 && list[0].angle == roid1.angle {
+		if len(list) > 0 && floatEquals(list[0].angle, roid1.angle) {
+			log.Printf("Found a matching angle %f\n", roid1.angle)
+			result[idx] = append(list, roid1)
+			return true
+		}
+	}
+	return false
+}
+
+func p2SortByAngleAndDistance(mStation *asteroid, aMap *asteroidMap) [][]*asteroid {
+	result := make([][]*asteroid, 0)
+	for _, roid1 := range aMap.asteroids {
+		if mStation.x == roid1.x && mStation.y == roid1.y {
+			// Skip the monitoring station
+			continue
+		}
+		if p2InsertMatchingAngle(result, roid1) {
+			continue
+		}
+		// Did not find a matching angle in result so add one
+		tmp := make([]*asteroid, 1)
+		tmp[0] = roid1
+		log.Printf("Adding new angle %f", roid1.angle)
+		result = append(result, tmp)
+	}
+	// sort 'result' by angle
+	sort.Slice(result, func(i, j int) bool {
+		return result[i][0].angle < result[j][0].angle
+	})
+	// sort each subArray by distance
+	for _, roidList := range result {
+		sort.Slice(roidList, func(i, j int) bool {
+			return roidList[i].distance < roidList[j].distance
+		})
+	}
+	return result
+}
+
+func part2(aMap *asteroidMap, mStation *asteroid) error {
 	//fmt.Print(aMap)
+	// Populate the angle and distance fields of all asteroids
+	p2ComputeAngleAndDistance(mStation, aMap)
+	roids := p2SortByAngleAndDistance(mStation, aMap)
+	for idx, roidList := range roids {
+		roid := roidList[0]
+		log.Printf("[%d]: a: %f; d: %f; %q", idx, roid.angle, roid.distance, roid)
+		//for _, roid := range roidList {
+		//	log.Printf("[%d]: a: %f; d: %f; %q", idx, roid.angle, roid.distance, roid)
+		//}
+	}
 	answer := 0
+	if len(roids) > 200 {
+		roid200 := roids[199][0]
+		answer = roid200.x*100 + roid200.y
+	} else {
+		log.Fatal("Don't know how to rotate the laser yet")
+	}
 	fmt.Printf("Part 2: %d\n", answer)
 	return nil
 }
 
+// part 2 guess 1: 1321 is incorrect
 func main() {
 	puzzleInput := "input.txt"
+	//puzzleInput = "test5.txt"
+	//puzzleInput = "test6.txt"
 	aMap, err := loadAsteroidMap(puzzleInput)
 	if err != nil {
 		log.Fatal(err)
