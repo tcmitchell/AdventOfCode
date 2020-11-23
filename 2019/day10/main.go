@@ -8,14 +8,62 @@ import (
 	"strings"
 )
 
+// rads2degs converts an angle measured in radians to an
+// angle measured in degrees.
+func rads2degs(rads float64) float64 {
+	return rads * 180.0 / math.Pi
+}
+
 type asteroid struct {
 	x, y int
+	// Angle from the radar station
+	angle float64
+	// Distance from the radar station
+	distance float64
 }
 
 func (a *asteroid) String() string {
 	return fmt.Sprintf("asteroid(%d, %d)", a.x, a.y)
 }
 
+// angle2asteroid finds the angle from vertical measuring clockwise
+// between the asteroid and another asteroid.
+func (a *asteroid) angle2asteroid(a2 *asteroid) float64 {
+	v1x := float64(0)
+	v1y := float64(a.y)
+	v2x := float64(a2.x - a.x)
+	v2y := float64(a2.y - a.y)
+	num := v1x*v2x + v1y*v2y
+	//log.Printf("Numerator: %e", num)
+	denom := math.Sqrt(v1x*v1x+v1y*v1y) * math.Sqrt(v2x*v2x+v2y*v2y)
+	//log.Printf("Denominator: %e", denom)
+	angle := math.Acos(num / denom)
+	//log.Printf("Angle = %e\n", angle)
+	degs := rads2degs(angle)
+	if a2.x < a.x {
+		degs += 180
+	} else {
+		degs = 180 - degs
+	}
+	return degs
+}
+
+func (a *asteroid) dist2asteroid(a2 *asteroid) float64 {
+	dx := a2.x - a.x
+	dy := a2.y - a.y
+	return math.Sqrt(math.Pow(float64(dx), 2) + math.Pow(float64(dy), 2))
+}
+
+// --------------------------------------------------
+// asteroidMap
+// --------------------------------------------------
+
+// asteroidMap contains all the asteroids in the problem input.
+//
+// Field locations is an array of arrays of asteroids, indexed by
+// y-position (outer array) and x-position (inner arrays).
+//
+// Field asteroids is an array of all asteroids.
 type asteroidMap struct {
 	locations [][]*asteroid
 	asteroids []*asteroid
