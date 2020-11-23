@@ -195,7 +195,7 @@ func p2InsertMatchingAngle(result [][]*asteroid, roid1 *asteroid) bool {
 	for idx, list := range result {
 		//if len(list) > 0 && list[0].angle == roid1.angle {
 		if len(list) > 0 && floatEquals(list[0].angle, roid1.angle) {
-			log.Printf("Found a matching angle %f\n", roid1.angle)
+			//log.Printf("Found a matching angle %f\n", roid1.angle)
 			result[idx] = append(list, roid1)
 			return true
 		}
@@ -216,7 +216,7 @@ func p2SortByAngleAndDistance(mStation *asteroid, aMap *asteroidMap) [][]*astero
 		// Did not find a matching angle in result so add one
 		tmp := make([]*asteroid, 1)
 		tmp[0] = roid1
-		log.Printf("Adding new angle %f", roid1.angle)
+		//log.Printf("Adding new angle %f", roid1.angle)
 		result = append(result, tmp)
 	}
 	// sort 'result' by angle
@@ -239,7 +239,9 @@ func part2(aMap *asteroidMap, mStation *asteroid) error {
 	roids := p2SortByAngleAndDistance(mStation, aMap)
 	for idx, roidList := range roids {
 		roid := roidList[0]
-		log.Printf("[%d]: a: %f; d: %f; %q", idx, roid.angle, roid.distance, roid)
+		if false {
+			log.Printf("[%d]: a: %f; d: %f; %q", idx, roid.angle, roid.distance, roid)
+		}
 		//for _, roid := range roidList {
 		//	log.Printf("[%d]: a: %f; d: %f; %q", idx, roid.angle, roid.distance, roid)
 		//}
