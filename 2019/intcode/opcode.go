@@ -40,7 +40,10 @@ func doInput(i *Interpreter) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	i.program[loc] = <-i.input
+	if i.inputFunc != nil {
+		i.inputFunc(i.input)
+	}
+	i.program[loc] = <- i.input
 	// log.Printf("Input: %d\n", i.program[loc])
 	return i.ip + 2, nil
 }
