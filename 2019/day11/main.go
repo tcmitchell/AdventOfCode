@@ -94,7 +94,7 @@ func paintTile(robot *Robot, paintColor int) {
 	}
 	tile, ok := robot.Tiles[robot.Location]
 	if !ok {
-		tile = &Tile{}
+		tile = &Tile{robot.Location, 0, false}
 		robot.Tiles[robot.Location] = tile
 	}
 	tile.Color = paintColor
@@ -108,7 +108,7 @@ func currentTileColor(robot *Robot) int {
 	}
 	tile, ok := robot.Tiles[robot.Location]
 	if !ok {
-		tile = &Tile{}
+		tile = &Tile{robot.Location, 0, false}
 		robot.Tiles[robot.Location] = tile
 	}
 	log.Printf("Tile %d, %d is %d", robot.Location.x, robot.Location.y, tile.Color)
@@ -189,10 +189,90 @@ func part1(progFile string) error {
 	return nil
 }
 
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func p2PrintHull(robot *Robot) {
+	var minX, maxX, minY, maxY int
+	for _, tile := range robot.Tiles {
+		fmt.Printf("Tile %d, %d\n", tile.Location.x, tile.Location.y)
+		minX = minInt(tile.Location.x, minX)
+		maxX = maxInt(tile.Location.x, maxX)
+		minY = minInt(tile.Location.y, minY)
+		maxY = maxInt(tile.Location.y, maxY)
+	}
+	fmt.Printf("Hull goes from %d -> %d and %d -> %d\n", minY, maxY, minX, maxX)
+	for y := minY; y<=maxY; y++ {
+		for x := minX; x<=maxX; x++ {
+			pt := Point{x, y}
+			tile, ok := robot.Tiles[pt]
+			if ok {
+				switch tile.Color {
+				case 0:
+					fmt.Print(".")
+				case 1:
+					fmt.Print("#")
+				}
+			} else {
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println("")
+	}
+}
+
+func part2(progFile string) error {
+	robot := Robot{}
+	fmt.Printf("Robot: %d, %d; %d", robot.Location.x, robot.Location.y, robot.Direction)
+	robot.inChan = make(chan int, 1)
+	robot.outChan = make(chan int, 1000)
+	robot.Tiles = make(map[Point]*Tile)
+	tile := &Tile{robot.Location, 1, false}
+	robot.Tiles[robot.Location] = tile
+
+	interpreter, err := intcode.NewInterpreter(progFile, robot.inChan, robot.outChan, "robot")
+	if err != nil {
+		return err
+	}
+	interpreter.SetInputFunction(func (ch chan int) {
+		p1DummyInput(&robot, ch)
+	})
+	//go p1DummyInput(&robot, robot.inChan)
+	p1RunInterpreter(interpreter)
+	p1DrainOutput(&robot)
+	paintedCount := 0
+	for _, tile := range robot.Tiles {
+		if tile.Painted {
+			paintedCount += 1
+		}
+	}
+	// Correct answer is AKERJFHK
+	fmt.Printf("Part 2: %d\n", paintedCount)
+	p2PrintHull(&robot)
+	return nil
+}
+
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Printf("North: %d\n", NORTH)
 	err := part1("input.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = part2("input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
