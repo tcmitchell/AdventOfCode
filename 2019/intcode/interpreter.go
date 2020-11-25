@@ -6,13 +6,13 @@ import (
 
 // Interpreter manages a running intcode program
 type Interpreter struct {
-	program Program  // An intcode program
-	ip      int      // The instruction pointer
-	relBase int      // The relative parameter base
-	input   chan int // The input channel
-	output  chan int // The output channel
-	name    string   // The name of this interpreter for debugging
-	inputFunc func(chan int)  // A function to invoke for input
+	program   Program        // An intcode program
+	ip        int            // The instruction pointer
+	relBase   int            // The relative parameter base
+	input     chan int       // The input channel
+	output    chan int       // The output channel
+	name      string         // The name of this interpreter for debugging
+	inputFunc func(chan int) // A function to invoke for input
 }
 
 // NewInterpreter creates a new intcode interpreter
@@ -64,4 +64,8 @@ func (i *Interpreter) Run() error {
 
 func (i *Interpreter) SetInputFunction(f func(chan int)) {
 	i.inputFunc = f
+}
+
+func (i *Interpreter) SetMemoryLocation(location, value int) {
+	i.program[location] = value
 }
