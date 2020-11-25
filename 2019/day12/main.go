@@ -47,7 +47,7 @@ func parseInput(inputFile string) ([]*Moon, error) {
 			continue
 		}
 		row = strings.Trim(row, "<>")
-		fmt.Printf("%d: %s\n", idx, row)
+		//log.Printf("%d: %s\n", idx, row)
 		elems := strings.Split(row, ", ")
 		coords := make([]int, len(elems))
 		for j, e := range elems {
@@ -120,10 +120,10 @@ func part1(inputFile string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Loaded %d moons\n", len(moons))
-	for _, moon := range moons {
-		fmt.Printf("%s\n", moon)
-	}
+	//log.Printf("Loaded %d moons\n", len(moons))
+	//for _, moon := range moons {
+	//	log.Printf("%s\n", moon)
+	//}
 	iters := 1000
 	for iter := 0; iter < iters; iter++ {
 		for j := 0; j < len(moons)-1; j++ {
@@ -132,30 +132,120 @@ func part1(inputFile string) error {
 			}
 		}
 		applyVelocity(moons)
-		fmt.Printf("----- After iteration %d -----\n", iter+1)
-		for _, moon := range moons {
-			fmt.Printf("%s\n", moon)
-		}
-		fmt.Println()
+		//log.Printf("----- After iteration %d -----\n", iter+1)
+		//for _, moon := range moons {
+		//	log.Printf("%s\n", moon)
+		//}
+		//log.Println()
 	}
 	energy := computeEnergy(moons)
-	fmt.Printf("Energy = %d\n", energy)
+	fmt.Printf("Part 1: %d\n", energy)
 	return nil
 }
 
+// ------------------------------------------------------------
+// Part 2
+// ------------------------------------------------------------
+
+func p2ComputeGravity(p1, p2, v1, v2 int) (int, int) {
+	if p1 > p2 {
+		v1 -= 1
+		v2 += 1
+	} else if p1 < p2 {
+		v1 += 1
+		v2 -= 1
+	}
+	return v1, v2
+}
+
+func findCycle(p1, p2, p3, p4, limit int) (int, error) {
+	s1, s2, s3, s4 := p1, p2, p3, p4
+	var v1, v2, v3, v4 int
+	//log.Printf("%d: %d, %d, %d, %d", 0, p1, p2, p3, p4)
+	for i := 0; i < limit; i++ {
+		// Compute velocity
+		v1, v2 = p2ComputeGravity(p1, p2, v1, v2)
+		v1, v3 = p2ComputeGravity(p1, p3, v1, v3)
+		v1, v4 = p2ComputeGravity(p1, p4, v1, v4)
+		v2, v3 = p2ComputeGravity(p2, p3, v2, v3)
+		v2, v4 = p2ComputeGravity(p2, p4, v2, v4)
+		v3, v4 = p2ComputeGravity(p3, p4, v3, v4)
+		//log.Printf("Velocity %d: %d, %d, %d, %d", i+1, v1, v2, v3, v4)
+		// Compute new position
+		p1 += v1
+		p2 += v2
+		p3 += v3
+		p4 += v4
+		//log.Printf("%d: %d, %d, %d, %d", i+1, p1, p2, p3, p4)
+		if p1 == s1 && p2 == s2 && p3 == s3 && p4 == s4 {
+			// Add 2 to the iteration. 1 for the initial state
+			// and 1 because we're done with the current iteration
+			// and haven't incremented
+			return i + 2, nil
+		}
+	}
+	return 0, fmt.Errorf("no cycle found")
+}
+
+// greatest common divisor (GCD) via Euclidean algorithm
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
+}
+
 func part2(inputFile string) error {
+	//part2Logger := log.New(os.Stderr, "P2: ", log.Ldate|log.Ltime|log.Lshortfile)
 	moons, err := parseInput(inputFile)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Loaded %d moons", len(moons))
+	//part2Logger.Printf("Loaded %d moons", len(moons))
+	limit := 1000000
+	cycleX, err := findCycle(moons[0].Position.x, moons[1].Position.x,
+		moons[2].Position.x, moons[3].Position.x, limit)
+	if err != nil {
+		return err
+	}
+	//part2Logger.Printf("X cycle: %d", cycleX)
+
+	cycleY, err := findCycle(moons[0].Position.y, moons[1].Position.y,
+		moons[2].Position.y, moons[3].Position.y, limit)
+	if err != nil {
+		return err
+	}
+	//part2Logger.Printf("Y cycle: %d", cycleY)
+
+	cycleZ, err := findCycle(moons[0].Position.z, moons[1].Position.z,
+		moons[2].Position.z, moons[3].Position.z, limit)
+	if err != nil {
+		return err
+	}
+	//part2Logger.Printf("Z cycle: %d", cycleZ)
+
+	answer := LCM(cycleX, cycleY, cycleZ)
+	fmt.Printf("Part 2: %d\n", answer)
+
 	return nil
 }
 
 func main() {
-	fmt.Println("Hello, World!")
 	inputFile := "input.txt"
-	//inputFile = "test-input2.txt"
+	//inputFile = "test-input1.txt"
 	err := part1(inputFile)
 	if err != nil {
 		log.Fatal(err)
