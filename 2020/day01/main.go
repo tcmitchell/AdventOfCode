@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func strings2ints(input []string) ([]int, error) {
+func Strings2ints(input []string) ([]int, error) {
 	result := make([]int, len(input))
 	for i, item := range input {
 		intItem, err := strconv.Atoi(item)
@@ -20,14 +20,27 @@ func strings2ints(input []string) ([]int, error) {
 	return result, nil
 }
 
-func part2(filename string) (int, error) {
+func ReadFileOfStrings(filename string) ([]string, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	input := strings.TrimSpace(string(bytes))
 	lines := strings.Split(input, "\n")
-	numbers, err := strings2ints(lines)
+	return lines, nil
+}
+
+// Reads the given file as a list of integers
+func ReadFileOfInts(filename string) ([]int, error) {
+	lines, err := ReadFileOfStrings(filename)
+	if err != nil {
+		return nil, err
+	}
+	return Strings2ints(lines)
+}
+
+func part2(filename string) (int, error) {
+	numbers, err := ReadFileOfInts(filename)
 	if err != nil {
 		return 0, err
 	}
@@ -40,17 +53,11 @@ func part2(filename string) (int, error) {
 			}
 		}
 	}
-	return 0, fmt.Errorf("No numbers summed to 2020")
+	return 0, fmt.Errorf("no numbers summed to 2020")
 }
 
 func part1(filename string) (int, error) {
-	bytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return 0, err
-	}
-	input := strings.TrimSpace(string(bytes))
-	lines := strings.Split(input, "\n")
-	numbers, err := strings2ints(lines)
+	numbers, err := ReadFileOfInts(filename)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +68,7 @@ func part1(filename string) (int, error) {
 			}
 		}
 	}
-	return 0, fmt.Errorf("No numbers summed to 2020")
+	return 0, fmt.Errorf("no numbers summed to 2020")
 }
 
 func main() {
