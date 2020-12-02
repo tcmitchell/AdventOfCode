@@ -39,11 +39,11 @@ func part1(filename string) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		log.Printf("%d-%d %s: %s", lo, hi, char, password)
+		//log.Printf("%d-%d %s: %s", lo, hi, char, password)
 		occurs := strings.Count(password, char)
-		log.Printf("Found %d occurrences of %s in %s", occurs, char, password)
+		//log.Printf("Found %d occurrences of %s in %s", occurs, char, password)
 		if lo <= occurs && occurs <= hi {
-			log.Printf("%s is a valid password", password)
+			//log.Printf("%s is a valid password", password)
 			validPasswords++
 		}
 	}
@@ -58,14 +58,35 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Part1: %d\n", p1)
+	fmt.Printf("Part 1: %d\n", p1)
 	p2, err := part2(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Part2: %d\n", p2)
+	fmt.Printf("Part 2: %d\n", p2)
 }
 
 func part2(filename string) (int, error) {
-	return 0, nil
+	lines, err := aoc.ReadFileOfStrings(filename)
+	if err != nil {
+		return 0, err
+	}
+	validPasswords := 0
+	for _, line := range lines {
+		lo, hi, char, password, err := parseLine(line)
+		if err != nil {
+			return 0, err
+		}
+		// Decrement so the indices are zero-based
+		lo--
+		hi--
+		//log.Printf("%d-%d %s: %s", lo, hi, char, password)
+		chr := char[0]
+		if (password[lo] == chr && password[hi] != chr) ||
+			(password[lo] != chr && password[hi] == chr) {
+			//log.Printf("%s is a valid password", password)
+			validPasswords++
+		}
+	}
+	return validPasswords, nil
 }
