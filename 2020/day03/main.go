@@ -6,24 +6,29 @@ import (
 	"log"
 )
 
+func checkSlope(lines []string, sx, sy int) int {
+	width := len(lines[0])
+	trees := 0
+	x, y := 0, 0
+	for y < len(lines)-1 {
+		x += sx
+		if x >= width {
+			x -= width
+		}
+		y += sy
+		if lines[y][x] == '#' {
+			trees++
+		}
+	}
+	return trees
+}
+
 func part1(filename string) (int, error) {
 	lines, err := aoc.ReadFileOfStrings(filename)
 	if err != nil {
 		return 0, err
 	}
-	width := len(lines[0])
-	trees := 0
-	x, y := 0, 0
-	for y < len(lines)-1 {
-		x += 3
-		if x >= width {
-			x -= width
-		}
-		y += 1
-		if lines[y][x] == '#' {
-			trees++
-		}
-	}
+	trees := checkSlope(lines, 3, 1)
 	return trees, nil
 }
 
@@ -48,5 +53,16 @@ func part2(filename string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return len(lines), nil
+	trees := 1
+	//Right 1, down 1.
+	trees *= checkSlope(lines, 1, 1)
+	//Right 3, down 1. (This is the slope you already checked.)
+	trees *= checkSlope(lines, 3, 1)
+	//Right 5, down 1.
+	trees *= checkSlope(lines, 5, 1)
+	//Right 7, down 1.
+	trees *= checkSlope(lines, 7, 1)
+	//Right 1, down 2.
+	trees *= checkSlope(lines, 1, 2)
+	return trees, nil
 }
