@@ -4,8 +4,24 @@ import (
 	"../aoc"
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+var HairColorRegex = regexp.MustCompile(`^#[\da-f]{6}$`)
+
+var PassportIdRegex = regexp.MustCompile(`^\d{9}$`)
+
+var EyeColors = map[string]string{
+	"amb": "",
+	"blu": "",
+	"brn": "",
+	"gry": "",
+	"grn": "",
+	"hzl": "",
+	"oth": "",
+}
 
 type Passport map[string]string
 
@@ -91,6 +107,77 @@ func main() {
 	fmt.Printf("Part 2: %d\n", p2)
 }
 
+func validIntString(v string, lo int, hi int) bool {
+	value, err := strconv.Atoi(v)
+	if err != nil {
+		return false
+	}
+	return lo <= value && value <= hi
+}
+func validIntField(passport Passport, field string, lo int, hi int) bool {
+	v, ok := passport[field]
+	if !ok {
+		return false
+	}
+	return validIntString(v, lo, hi)
+}
+
+func validByr(passport Passport) bool {
+	return validIntField(passport, "byr", 1920, 2002)
+}
+
+func validIyr(passport Passport) bool {
+	return validIntField(passport, "iyr", 2010, 2020)
+}
+
+func validEyr(passport Passport) bool {
+	return validIntField(passport, "eyr", 2020, 2030)
+}
+
+func validHeight(passport Passport) bool {
+	v, ok := passport["hgt"]
+	if !ok {
+		return false
+	}
+	if v[len(v)-2:] == "in" {
+		return validIntString(v[0:len(v)-2], 59, 76)
+	} else if v[len(v)-2:] == "cm" {
+		return validIntString(v[0:len(v)-2], 150, 193)
+	} else {
+		return false
+	}
+}
+
+func validHairColor(passport Passport) bool {
+	return HairColorRegex.MatchString(passport["hcl"])
+}
+
+func validEyeColor(passport Passport) bool {
+	_, ok := EyeColors[passport["ecl"]]
+	return ok
+}
+
+func validPassportId(passport Passport) bool {
+	return PassportIdRegex.MatchString(passport["pid"])
+}
+
+func validFields(passport Passport) bool {
+	return validByr(passport) && validIyr(passport) && validEyr(passport) &&
+		validHeight(passport) && validHairColor(passport) &&
+		validEyeColor(passport) && validPassportId(passport)
+}
+
 func part2(filename string) (int, error) {
-	return 0, nil
+	passports, err := parsePassports(filename)
+	if err != nil {
+		return 0, err
+	}
+	//log.Printf("Loaded %d passports", len(passports))
+	validCount := 0
+	for _, p := range passports {
+		if validPassport(p) && validFields(p) {
+			validCount++
+		}
+	}
+	return validCount, nil
 }
