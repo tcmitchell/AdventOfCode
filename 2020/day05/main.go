@@ -63,13 +63,41 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Part 1: %d\n", p1)
-	p2, err := part2(filename)
+	p2, err := part2(filename, p1)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Part 2: %d\n", p2)
 }
 
-func part2(filename string) (int, error) {
-	return 0, nil
+func part2(filename string, maxId int) (int, error) {
+	lines, err := aoc.ReadFileOfStrings(filename)
+	if err != nil {
+		return 0, err
+	}
+	allIds := make([]int, maxId+1)
+	for _, line := range lines {
+		row := passToRow(BoardingPass(line))
+		//log.Printf("Row: %d", row)
+		column := passToColumn(BoardingPass(line))
+		//log.Printf("Column: %d", column)
+		id := row*8 + column
+		allIds[id] = id
+	}
+	inRange := false
+	for i := 0; i < maxId+1; i++ {
+		if !inRange {
+			// Skip over the empty seats at the front of the plane
+			if allIds[i] != 0 {
+				inRange = true
+			} else {
+				continue
+			}
+		}
+		if i != allIds[i] {
+			//log.Printf("%04d: %04d\n", i, allIds[i])
+			return i, nil
+		}
+	}
+	return 0, fmt.Errorf("no match")
 }
