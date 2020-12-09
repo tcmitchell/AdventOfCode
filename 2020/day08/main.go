@@ -23,6 +23,15 @@ type Program struct {
 	Accumulator  int
 }
 
+func (p Program) Copy() *Program {
+	var result Program
+	result.Instructions = make([]Instruction, len(p.Instructions))
+	copy(result.Instructions, p.Instructions)
+	result.Accumulator = p.Accumulator
+	result.PC = p.PC
+	return &result
+}
+
 func loadProgram(filename string) (*Program, error) {
 	lines, err := aoc.ReadFileOfStrings(filename)
 	if err != nil {
@@ -98,6 +107,43 @@ func main() {
 	fmt.Printf("Part 2: %d\n", p2)
 }
 
-func part2(_ string) (int, error) {
-	return 0, nil
+func runProgram(program *Program, change int) (int, error) {
+	switch program.Instructions[change].Type {
+	case "nop":
+		program.Instructions[change].Type = "jmp"
+	case "jmp":
+		program.Instructions[change].Type = "nop"
+	default:
+		return 0, fmt.Errorf("not changeable")
+	}
+	for {
+		if program.PC >= len(program.Instructions) {
+			return program.Accumulator, nil
+		}
+		if program.Instructions[program.PC].Executed {
+			return 0, fmt.Errorf("infinite loop")
+		}
+		offset, err := executeInstruction(program, program.PC)
+		if err != nil {
+			return 0, err
+		}
+		program.PC += offset
+	}
+}
+
+func part2(filename string) (int, error) {
+	program, err := loadProgram(filename)
+	if err != nil {
+		return 0, err
+	}
+	//for _, i := range program.Instructions {
+	//	log.Println(i)
+	//}
+	for i := 0; i < len(program.Instructions); i++ {
+		acc, err := runProgram(program.Copy(), i)
+		if err == nil {
+			return acc, err
+		}
+	}
+	return 0, fmt.Errorf("no solution found")
 }
