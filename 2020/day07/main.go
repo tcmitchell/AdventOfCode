@@ -29,7 +29,7 @@ func parseRule(line string) (Rule, error) {
 	contains := RHSregex.FindAllString(parts[1], -1)
 	bags := make([]Bags, len(contains))
 	for i, bag := range contains {
-		log.Printf(bag)
+		//log.Printf(bag)
 		elems := strings.Split(bag, " ")
 		count, err := strconv.Atoi(elems[0])
 		if err != nil {
@@ -72,7 +72,7 @@ func chainForward(rules map[string][]string) map[string]bool {
 		for k := range newlyFound {
 			allFound[k] = true
 		}
-		log.Printf("%d newly found colors", len(newlyFound))
+		//log.Printf("%d newly found colors", len(newlyFound))
 		found = newlyFound
 	}
 	return allFound
@@ -83,12 +83,12 @@ func part1(filename string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	for _, rule := range rules {
-		log.Printf(rule.Color)
-		for _, bag := range rule.Bags {
-			log.Printf("\t%d %s", bag.Count, bag.Color)
-		}
-	}
+	//for _, rule := range rules {
+	//	log.Printf(rule.Color)
+	//	for _, bag := range rule.Bags {
+	//		log.Printf("\t%d %s", bag.Count, bag.Color)
+	//	}
+	//}
 	forwardChain := make(map[string][]string)
 	for _, rule := range rules {
 		for _, bag := range rule.Bags {
@@ -100,19 +100,46 @@ func part1(filename string) (int, error) {
 			forwardChain[bag.Color] = append(chain, rule.Color)
 		}
 	}
-	log.Printf("%q", forwardChain["shiny gold"])
+	//log.Printf("%q", forwardChain["shiny gold"])
 	colors := chainForward(forwardChain)
 	return len(colors), nil
 }
 
-func part2(_ string) (int, error) {
-	return 0, nil
+func computeBagSize(color string, rules map[string]Rule, sizes map[string]int) int {
+	size, ok := sizes[color]
+	if ok {
+		return size
+	}
+	// Need to compute size of this color via the rule
+	rule := rules[color]
+	size = 0
+	for _, bag := range rule.Bags {
+		size += (computeBagSize(bag.Color, rules, sizes) + 1) * bag.Count
+	}
+	sizes[color] = size
+	return size
+}
+
+func part2(filename string) (int, error) {
+	rules, err := loadRules(filename)
+	if err != nil {
+		return 0, err
+	}
+	// Make a map of color -> rule
+	ruleMap := make(map[string]Rule)
+	for _, rule := range rules {
+		ruleMap[rule.Color] = rule
+	}
+	bagSizes := make(map[string]int)
+	shinyGoldSize := computeBagSize("shiny gold", ruleMap, bagSizes)
+	return shinyGoldSize, nil
 }
 
 func main() {
 	fmt.Println("Hello, World!")
 	filename := "input.txt"
 	//filename = "test-input1.txt"
+	//filename = "test-input2.txt"
 	p1, err := part1(filename)
 	if err != nil {
 		log.Fatal(err)
