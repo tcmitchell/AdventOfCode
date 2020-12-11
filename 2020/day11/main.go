@@ -13,6 +13,8 @@ type Point struct {
 
 type Room [][]string
 
+type NeighborFunc func(room Room, r, c int) []Point
+
 // Load a room from file. Rooms contain either 'L' or '.',
 // representing chair or floor respectively.
 func loadRoom(filename string) (Room, error) {
@@ -30,7 +32,9 @@ func loadRoom(filename string) (Room, error) {
 
 // Generate the list of neighbors for a given location
 // in the room.
-func neighborsOf(r, c, height, width int) []Point {
+func p1NeighborsOf(room Room, r, c int) []Point {
+	height := len(room)
+	width := len(room[0])
 	neighborPoints := make([]Point, 0)
 	for y := r - 1; y < r+2; y++ {
 		for x := c - 1; x < c+2; x++ {
@@ -55,14 +59,14 @@ func neighborsOf(r, c, height, width int) []Point {
 // Generate the list of neighbor points for each location
 // in the room. Do this one time, then use them during
 // room evolution.
-func neighborPoints(room Room) [][][]Point {
+func neighborPoints(room Room, nFunc NeighborFunc) [][][]Point {
 	height := len(room)
 	width := len(room[0])
 	neighbors := make([][][]Point, height)
 	for r := 0; r < height; r++ {
 		neighbors[r] = make([][]Point, width)
 		for c := 0; c < width; c++ {
-			neighbors[r][c] = neighborsOf(r, c, height, width)
+			neighbors[r][c] = nFunc(room, r, c)
 		}
 	}
 	return neighbors
@@ -78,7 +82,7 @@ func occupiedNeighbors(r, c int, room Room, neighbors [][][]Point) int {
 	return count
 }
 
-func evolveRoom(room Room, neighbors [][][]Point) (Room, int) {
+func evolveRoom(room Room, neighbors [][][]Point, occupiedLimit int) (Room, int) {
 	height := len(room)
 	width := len(room[0])
 	result := make(Room, height)
@@ -94,7 +98,7 @@ func evolveRoom(room Room, neighbors [][][]Point) (Room, int) {
 			if room[r][c] == "L" && occupied == 0 {
 				result[r][c] = "#"
 				changed++
-			} else if room[r][c] == "#" && occupied >= 4 {
+			} else if room[r][c] == "#" && occupied >= occupiedLimit {
 				result[r][c] = "L"
 				changed++
 			} else {
@@ -131,7 +135,7 @@ func part1(filename string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	neighbors := neighborPoints(room)
+	neighbors := neighborPoints(room, p1NeighborsOf)
 	//for r := 0; r < len(room); r++ {
 	//	for c := 0; c < len(room[r]); c++ {
 	//		log.Printf("%d, %d: %v\n", r, c, neighbors[r][c])
@@ -141,19 +145,115 @@ func part1(filename string) (int, error) {
 	changes := -1
 	i := 1
 	for ; changes != 0; i++ {
-		room, changes = evolveRoom(room, neighbors)
+		room, changes = evolveRoom(room, neighbors, 4)
 	}
 	//printRoom(room)
 	//log.Printf("Detected %d changes at iteration %d", changes, i)
 	return countOccupied(room), nil
 }
 
+func p2ClosestNeighbor(room Room, r, c, rStep, cStep int) (Point, error) {
+	height := len(room)
+	width := len(room[0])
+	for y, x := r+rStep, c+cStep; 0 <= y && y < height && 0 <= x && x < width; y, x = y+rStep, x+cStep {
+		if room[y][x] != "." {
+			return Point{x, y}, nil
+		}
+	}
+	//if rStep == 0 {
+	//	for x := c + cStep; 0 <= x && x < width; x += cStep {
+	//		if room[r][x] != "." {
+	//			return Point{x, r}, nil
+	//		}
+	//	}
+	//} else if cStep == 0 {
+	//	for y := r + rStep; 0 <= y && y < height; y += rStep {
+	//		if room[y][c] != "." {
+	//			return Point{c, y}, nil
+	//		}
+	//	}
+	//} else {
+	//	for y := r + rStep; 0 <= y && y < height; y += rStep {
+	//		for x := c + cStep; 0 <= x && x < width; x += cStep {
+	//			if room[x][y] != "." {
+	//				return Point{x, y}, nil
+	//			}
+	//		}
+	//	}
+	//}
+	return Point{}, fmt.Errorf("no neighbor found")
+}
+
+// Generate the list of neighbors for a given location
+// in the room. Run rays in all 8 directions to find the
+// closest chair locations.
+func p2NeighborsOf(room Room, r, c int) []Point {
+	neighborPoints := make([]Point, 0)
+	// North
+	pt, err := p2ClosestNeighbor(room, r, c, -1, 0)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// Northeast
+	pt, err = p2ClosestNeighbor(room, r, c, -1, 1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// East
+	pt, err = p2ClosestNeighbor(room, r, c, 0, 1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// Southeast
+	pt, err = p2ClosestNeighbor(room, r, c, 1, 1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// South
+	pt, err = p2ClosestNeighbor(room, r, c, 1, 0)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// Southwest
+	pt, err = p2ClosestNeighbor(room, r, c, 1, -1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// West
+	pt, err = p2ClosestNeighbor(room, r, c, 0, -1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	// Northwest
+	pt, err = p2ClosestNeighbor(room, r, c, -1, -1)
+	if err == nil {
+		neighborPoints = append(neighborPoints, pt)
+	}
+	return neighborPoints
+}
+
 func part2(filename string) (int, error) {
-	rows, err := aoc.ReadFileOfStrings(filename)
+	room, err := loadRoom(filename)
 	if err != nil {
 		return 0, err
 	}
-	return len(rows), nil
+	neighbors := neighborPoints(room, p2NeighborsOf)
+	//printRoom(room)
+	//for r := 0; r < len(room); r++ {
+	//	for c := 0; c < len(room[r]); c++ {
+	//		log.Printf("%d, %d: %v\n", r, c, neighbors[r][c])
+	//	}
+	//	log.Println()
+	//}
+	changes := -1
+	i := 1
+	for ; changes != 0; i++ {
+		room, changes = evolveRoom(room, neighbors, 5)
+		//log.Printf("Iteration %d had %d changes", i, changes)
+		//printRoom(room)
+	}
+	//log.Printf("Detected %d changes at iteration %d", changes, i)
+	return countOccupied(room), nil
 }
 
 func main() {
