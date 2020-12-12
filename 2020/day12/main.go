@@ -24,6 +24,10 @@ type Command struct {
 	Arg int
 }
 
+func (c Command) String() string {
+	return fmt.Sprintf("%s%d", c.Cmd, c.Arg)
+}
+
 func NewCommand(line string) (Command, error) {
 	cmd := line[0:1]
 	arg, err := strconv.Atoi(line[1:])
@@ -36,8 +40,13 @@ func NewCommand(line string) (Command, error) {
 type Interpreter func(s *Ship, command Command) error
 
 type Ship struct {
-	X, Y      int
-	Direction int
+	X, Y                 int
+	Direction            int
+	WaypointX, WaypointY int
+}
+
+func (s *Ship) String() string {
+	return fmt.Sprintf("%d, %d / %d / Waypoint %d, %d", s.X, s.Y, s.Direction, s.WaypointX, s.WaypointY)
 }
 
 func (s *Ship) ManhattanDistance(x, y int) int {
@@ -77,6 +86,37 @@ func (s *Ship) MoveForward(amount int) {
 	default:
 		panic(fmt.Errorf("unknown direction %v", s.Direction))
 	}
+}
+
+func (s *Ship) TurnWaypointLeft(amount int) {
+	switch amount {
+	case 90:
+		s.WaypointX, s.WaypointY = -s.WaypointY, s.WaypointX
+	case 180:
+		s.WaypointX, s.WaypointY = -s.WaypointX, -s.WaypointY
+	case 270:
+		s.TurnWaypointRight(90)
+	default:
+		panic(fmt.Errorf("unknown turn amount %d", amount))
+	}
+}
+
+func (s *Ship) TurnWaypointRight(amount int) {
+	switch amount {
+	case 90:
+		s.WaypointX, s.WaypointY = s.WaypointY, -s.WaypointX
+	case 180:
+		s.WaypointX, s.WaypointY = -s.WaypointX, -s.WaypointY
+	case 270:
+		s.TurnWaypointLeft(90)
+	default:
+		panic(fmt.Errorf("unknown turn amount %d", amount))
+	}
+}
+
+func (s *Ship) MoveTowardWaypoint(amount int) {
+	s.X += amount * s.WaypointX
+	s.Y += amount * s.WaypointY
 }
 
 func (s *Ship) Move(interpreter Interpreter, command Command) error {
@@ -137,12 +177,44 @@ func part1(filename string) (int, error) {
 	return s.ManhattanDistance(startX, startY), nil
 }
 
+func p2Interpreter(s *Ship, command Command) error {
+	switch command.Cmd {
+	case "N":
+		s.WaypointY += command.Arg
+	case "S":
+		s.WaypointY -= command.Arg
+	case "E":
+		s.WaypointX += command.Arg
+	case "W":
+		s.WaypointX -= command.Arg
+	case "L":
+		s.TurnWaypointLeft(command.Arg)
+	case "R":
+		s.TurnWaypointRight(command.Arg)
+	case "F":
+		s.MoveTowardWaypoint(command.Arg)
+	default:
+		return fmt.Errorf("unknown command %s", command.Cmd)
+	}
+	//log.Printf("After command %s", command)
+	//log.Printf("Ship: %s", s)
+	return nil
+}
+
 func part2(filename string) (int, error) {
-	rows, err := aoc.ReadFileOfStrings(filename)
+	commands, err := loadCommands(filename)
 	if err != nil {
 		return 0, err
 	}
-	return len(rows), nil
+	startX, startY := 0, 0
+	s := Ship{X: startX, Y: startY, Direction: East, WaypointX: 10, WaypointY: 1}
+	for _, cmd := range commands {
+		err = s.Move(p2Interpreter, cmd)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return s.ManhattanDistance(startX, startY), nil
 }
 
 func main() {
