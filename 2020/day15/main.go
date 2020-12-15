@@ -1,7 +1,6 @@
 package main
 
 import (
-	"../aoc"
 	"fmt"
 	"log"
 	"strconv"
@@ -20,7 +19,7 @@ func toIntArray(input []string) ([]int, error) {
 	return result, nil
 }
 
-func part1(input string) (int, error) {
+func runGame(input string, limit int) (int, error) {
 	numberStrings := strings.Split(input, ",")
 	numbers, err := toIntArray(numberStrings)
 	if err != nil {
@@ -38,7 +37,7 @@ func part1(input string) (int, error) {
 	lastNew := true
 	nextNum := 0
 	// Play the game
-	for ; turn <= 2020; turn++ {
+	for ; turn <= limit; turn++ {
 		// Was last number already said?
 		lastTurn, ok := said[nextNum]
 		lastNew = !ok
@@ -55,25 +54,23 @@ func part1(input string) (int, error) {
 	return lastSaid, nil
 }
 
-func part2(filename string) (int, error) {
-	lines, err := aoc.ReadFileOfStrings(filename)
-	if err != nil {
-		return 0, err
-	}
-	return len(lines), nil
+func part1(input string) (int, error) {
+	return runGame(input, 2020)
+}
+
+func part2(input string) (int, error) {
+	return runGame(input, 30000000)
 }
 
 func main() {
 	fmt.Println("Hello, World!")
-	filename := "input.txt"
-	//filename = "test-input1.txt"
-	//filename = "test-input2.txt"
-	p1, err := part1("14,8,16,0,1,17")
+	input := "14,8,16,0,1,17"
+	p1, err := part1(input)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Part 1: %d\n", p1)
-	p2, err := part2(filename)
+	p2, err := part2(input)
 	if err != nil {
 		log.Fatal(err)
 	}
