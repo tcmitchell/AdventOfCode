@@ -118,61 +118,27 @@ func part1(filename string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	//for point, state := range grid.Points {
-	//	log.Printf("%v: %s", point, state)
-	//}
-	//for X := grid.MinX; X <= grid.MaxX; X++ {
-	//	for Y := grid.MinY; Y <= grid.MaxY; Y++ {
-	//		for Z := grid.MinZ; Z <= grid.MaxZ; Z++ {
-	//			key := Point3D{X, Y, Z}
-	//			log.Printf("%v: %s", key, grid.Points[key])
-	//		}
-	//	}
-	//}
 	for i := 0; i < 6; i++ {
 		grid = RunCycle(grid)
-		//active := grid.CountActiveCells()
-		//log.Printf("Cycle %d: %d active cells", i + 1, active)
 	}
 	return grid.CountActiveCells(), nil
 }
 
-type Point4D struct {
-	x, y, z, w int
-}
-
-func (p Point4D) Neighbors() []Point4D {
-	result := make([]Point4D, 0)
-	for x := p.x - 1; x <= p.x+1; x++ {
-		for y := p.y - 1; y <= p.y+1; y++ {
-			for z := p.z - 1; z <= p.z+1; z++ {
-				for w := p.w - 1; w <= p.w+1; w++ {
-					if x == p.x && y == p.y && z == p.z && w == p.w {
-						continue
-					}
-					result = append(result, Point4D{x, y, z, w})
-				}
-			}
-		}
-	}
-	return result
-}
-
 type Grid4D struct {
-	Points    map[Point4D]string
-	Min       Point4D
-	Max       Point4D
-	Neighbors map[Point4D][]Point4D
+	Points    map[aoc.Point4D]string
+	Min       aoc.Point4D
+	Max       aoc.Point4D
+	Neighbors map[aoc.Point4D][]aoc.Point4D
 }
 
 func NewGrid4D() *Grid4D {
 	var grid Grid4D
-	grid.Points = make(map[Point4D]string)
-	grid.Neighbors = make(map[Point4D][]Point4D)
+	grid.Points = make(map[aoc.Point4D]string)
+	grid.Neighbors = make(map[aoc.Point4D][]aoc.Point4D)
 	return &grid
 }
 
-func (g *Grid4D) GetNeighbors(p Point4D) []Point4D {
+func (g *Grid4D) GetNeighbors(p aoc.Point4D) []aoc.Point4D {
 	n, ok := g.Neighbors[p]
 	if !ok {
 		// Not already in the map, so generate the neighbors
@@ -182,7 +148,7 @@ func (g *Grid4D) GetNeighbors(p Point4D) []Point4D {
 	return n
 }
 
-func (g *Grid4D) CountActiveNeighbors(p Point4D) int {
+func (g *Grid4D) CountActiveNeighbors(p aoc.Point4D) int {
 	result := 0
 	for _, n := range g.GetNeighbors(p) {
 		if g.Points[n] == Active {
@@ -215,35 +181,35 @@ func loadGrid4D(filename string) (*Grid4D, error) {
 			maxY = y
 		}
 		for x, state := range strings.Split(line, "") {
-			point := Point4D{x, y, 0, 0}
+			point := aoc.Point4D{X: x, Y: y}
 			grid.Points[point] = state
 			if x > maxX {
 				maxX = x
 			}
 		}
 	}
-	grid.Max.x = maxX
-	grid.Max.y = maxY
+	grid.Max.X = maxX
+	grid.Max.Y = maxY
 	return grid, nil
 }
 
 func RunCycle4D(grid *Grid4D) *Grid4D {
 	result := NewGrid4D()
-	result.Min.x = grid.Min.x - 1
-	result.Max.x = grid.Max.x + 1
-	result.Min.y = grid.Min.y - 1
-	result.Max.y = grid.Max.y + 1
-	result.Min.z = grid.Min.z - 1
-	result.Max.z = grid.Max.z + 1
-	result.Min.w = grid.Min.w - 1
-	result.Max.w = grid.Max.w + 1
+	result.Min.X = grid.Min.X - 1
+	result.Max.X = grid.Max.X + 1
+	result.Min.Y = grid.Min.Y - 1
+	result.Max.Y = grid.Max.Y + 1
+	result.Min.Z = grid.Min.Z - 1
+	result.Max.Z = grid.Max.Z + 1
+	result.Min.W = grid.Min.W - 1
+	result.Max.W = grid.Max.W + 1
 	result.Neighbors = grid.Neighbors
-	for x := result.Min.x; x <= result.Max.x; x++ {
-		for y := result.Min.y; y <= result.Max.y; y++ {
-			for z := result.Min.z; z <= result.Max.z; z++ {
+	for x := result.Min.X; x <= result.Max.X; x++ {
+		for y := result.Min.Y; y <= result.Max.Y; y++ {
+			for z := result.Min.Z; z <= result.Max.Z; z++ {
 				//log.Printf("%v: %s", loc, grid.Points[loc])
-				for w := result.Min.w; w <= result.Max.w; w++ {
-					loc := Point4D{x, y, z, w}
+				for w := result.Min.W; w <= result.Max.W; w++ {
+					loc := aoc.Point4D{X: x, Y: y, Z: z, W: w}
 					activeNeighbors := grid.CountActiveNeighbors(loc)
 					state := grid.Points[loc]
 					if state == Active {
