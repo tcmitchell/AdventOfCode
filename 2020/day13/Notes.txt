@@ -1,0 +1,20 @@
+>>> for i in range(0, 50000, 17):
+...     if (i + 2) % 13 == 0:
+...             print(i)
+...             break
+102
+
+>>> 17 * 13
+221
+>>> for i in range(102, 50000, 221):
+...     if (i + 3) % 19 == 0:
+...             print(i)
+...             break
+...
+3417
+
+Iteratively add a new number, stepping by the product of all the previous numbers
+
+References:
+  * https://www.reddit.com/r/adventofcode/comments/kc60ri/2020_day_13_can_anyone_give_me_a_hint_for_part_2/gfnnfm3/
+  * https://paste.debian.net/plainh/f26a33ae
