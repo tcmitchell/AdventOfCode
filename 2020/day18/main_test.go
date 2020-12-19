@@ -26,6 +26,18 @@ func TestP1ShuntingYard(t *testing.T) {
 	}
 }
 
+func TestP2EvalExpr(t *testing.T) {
+	expected := 46
+	expr := "2 * 3 + (4 * 5)"
+	actual, err := p2EvalExpr(expr)
+	if err != nil {
+		t.Error(err)
+	}
+	if actual != expected {
+		t.Errorf("expected %d, got %d", expected, actual)
+	}
+}
+
 //func TestP1EvalExpr(t *testing.T) {
 //	var expected int = 26
 //	actual, err := p1Eval("2 * 3 + (4 * 5)")

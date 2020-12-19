@@ -145,12 +145,77 @@ func part1(filename string) (int, error) {
 	return sum, nil
 }
 
+func p2ShuntingYard(tokens []Token) ([]Token, error) {
+	out := make([]Token, 0)
+	opStack := make([]Token, 0)
+	for _, t := range tokens {
+		switch t.Op {
+		case "":
+			// token is a number
+			out = append(out, t)
+		case "+":
+			// Nothing is higher precedence, so pop nothing here
+			// Add this operator to the operator queue
+			opStack = append(opStack, t)
+		case "*":
+			// Pop higher precedence operators from the operator stack to the output queue
+			for len(opStack) > 0 && opStack[len(opStack)-1].Op == "+" && opStack[len(opStack)-1].Op != "(" {
+				out = append(out, opStack[len(opStack)-1])
+				opStack = opStack[:len(opStack)-1]
+			}
+			// Add this operator to the operator queue
+			opStack = append(opStack, t)
+		case "(":
+			opStack = append(opStack, t)
+		case ")":
+			// Pop operators from the operator stack to the output queue
+			for len(opStack) > 0 && opStack[len(opStack)-1].Op != "(" {
+				out = append(out, opStack[len(opStack)-1])
+				opStack = opStack[:len(opStack)-1]
+			}
+			// if there is a left parenthesis at the top of the operator stack
+			if opStack[len(opStack)-1].Op == "(" {
+				// drop it
+				opStack = opStack[:len(opStack)-1]
+			}
+		default:
+			return nil, fmt.Errorf("unknown token %s", t)
+		}
+	}
+	for len(opStack) > 0 {
+		out = append(out, opStack[len(opStack)-1])
+		opStack = opStack[:len(opStack)-1]
+	}
+	return out, nil
+}
+
+func p2EvalExpr(expr string) (int, error) {
+	tokens, err := tokenize(expr)
+	if err != nil {
+		return 0, err
+	}
+	tokens, err = p2ShuntingYard(tokens)
+	if err != nil {
+		return 0, err
+	}
+	//log.Printf("RPN Queue: %v", tokens)
+	return p1EvalRpn(tokens)
+}
+
 func part2(filename string) (int, error) {
 	lines, err := aoc.ReadFileOfStrings(filename)
 	if err != nil {
 		return 0, err
 	}
-	return len(lines), nil
+	sum := 0
+	for _, line := range lines {
+		value, err := p2EvalExpr(line)
+		if err != nil {
+			return 0, err
+		}
+		sum += value
+	}
+	return sum, nil
 }
 
 func main() {
