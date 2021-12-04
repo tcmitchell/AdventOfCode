@@ -53,6 +53,21 @@ def puzzle1(call_numbers: list[int], boards: list[BingoBoard]) -> int:
 
 
 def puzzle2(call_numbers: list[int], boards: list[BingoBoard]) -> int:
+    for cn in call_numbers:
+        for board in boards:
+            board.mark(cn)
+        # filter winning boards
+        losers = [b for b in boards if not b.winner()]
+        if losers:
+            boards = losers
+            continue
+        else:
+            # No more boards!
+            logging.info("One non-winner")
+            board = boards[0]
+            unmarked = board.unmarked()
+            sum_unmarked = sum(unmarked)
+            return sum_unmarked * cn
     return 0
 
 
