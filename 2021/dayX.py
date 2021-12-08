@@ -15,12 +15,12 @@ def parse_args(args):
 
 
 def init_logging(debug=False):
-    msgFormat = '%(asctime)s %(levelname)s %(message)s'
-    dateFormat = '%m/%d/%Y %H:%M:%S'
+    msg_format = '%(asctime)s %(levelname)s %(message)s'
+    date_format = '%m/%d/%Y %H:%M:%S'
     level = logging.INFO
     if debug:
         level = logging.DEBUG
-    logging.basicConfig(format=msgFormat, datefmt=dateFormat, level=level)
+    logging.basicConfig(format=msg_format, datefmt=date_format, level=level)
 
 
 def load_input(fp: TextIO):
