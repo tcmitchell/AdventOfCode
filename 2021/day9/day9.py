@@ -2,7 +2,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import TextIO, Tuple
+from typing import TextIO, Tuple, Any
 
 
 def parse_args(args):
@@ -61,18 +61,53 @@ def is_minima(depths: list[list[int]], x: int, y: int) -> bool:
     return True
 
 
-# 1797 is too high
-def puzzle1(data: list[list[int]]) -> int:
+def find_minima(data):
     minima: list[Point] = []
     for y in range(len(data)):
         for x in range(len(data[0])):
             if is_minima(data, x, y):
                 minima.append(Point(x, y, data[y][x]))
+    return minima
+
+
+# 1797 is too high
+def puzzle1(data: list[list[int]]) -> int:
+    minima = find_minima(data)
     return sum([p.z + 1 for p in minima])
 
 
-def puzzle2(data: list[list[int]]) -> int:
-    return 0
+def ffinside(depths: list[list[int]], marked: dict[Tuple[int, int]], x: int, y: int) -> bool:
+    return (x, y) not in marked and depths[y][x] != 9
+
+
+def ffset(marked: dict[Tuple[int, int]], x: int, y: int) -> Any:
+    marked[(x, y)] = None
+
+
+def flood_fill(depths: list[list[int]], start_x: int, start_y: int) -> Any:
+    # See https://en.wikipedia.org/wiki/Flood_fill
+    marked: dict[Tuple[int, int]] = {}
+    node_queue: list[Tuple[int, int]] = [(start_x, start_y)]
+    while node_queue:
+        x, y = node_queue.pop(0)
+        if ffinside(depths, marked, x, y):
+            ffset(marked, x, y)
+            for neighbor in neighbors(depths, x, y):
+                node_queue.append(neighbor)
+    return marked
+
+
+def puzzle2(depths: list[list[int]]) -> int:
+    basin_sizes = []
+    for minimum in find_minima(depths):
+        basin = flood_fill(depths, minimum.x, minimum.y)
+        basin_size = len(basin)
+        basin_sizes.append(basin_size)
+    basin_sizes.sort(reverse=True)
+    result = 1
+    for bs in basin_sizes[:3]:
+        result *= bs
+    return result
 
 
 def main(argv):
