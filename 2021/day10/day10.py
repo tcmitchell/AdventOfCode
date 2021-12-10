@@ -1,7 +1,7 @@
 from __future__ import annotations
 import argparse
 import logging
-from typing import TextIO
+from typing import TextIO, Tuple
 
 
 def parse_args(args=None):
@@ -34,27 +34,56 @@ CHAR_SCORES = {')': 3, ']': 57, '}': 1197, '>': 25137}
 OPEN_CHARS = ['(', '[', '{', '<']
 CLOSE_CHARS = CHAR_SCORES.keys()
 MATCH_CLOSE_OPEN = {')': '(', ']': '[', '}': '{', '>': '<'}
+MATCH_OPEN_CLOSE = {v: k for k, v in MATCH_CLOSE_OPEN.items()}
+CHAR_SCORES2 = {')': 1, ']': 2, '}': 3, '>': 4}
 
 
-def puzzle1(data) -> int:
+def check_syntax(line: str) -> int:
     stack = []
+    for char in line:
+        if char in OPEN_CHARS:
+            stack.append(char)
+        elif char in CLOSE_CHARS:
+            match = stack.pop()
+            if MATCH_CLOSE_OPEN[char] != match:
+                # Syntax Error
+                return CHAR_SCORES[char]
+        else:
+            raise Exception(f"Unknown char {char}")
+    return 0
+
+
+def puzzle1(data) -> Tuple[int, list[str]]:
     score = 0
+    incomplete = []
     for line in data:
+        line_score = check_syntax(line)
+        score += line_score
+        if line_score == 0:
+            incomplete.append(line)
+    return score, incomplete
+
+
+def puzzle2(data) -> int:
+    all_scores = []
+    for line in data:
+        stack = []
+        score = 0
         for char in line:
             if char in OPEN_CHARS:
                 stack.append(char)
             elif char in CLOSE_CHARS:
-                match = stack.pop()
-                if MATCH_CLOSE_OPEN[char] != match:
-                    # Syntax Error
-                    score += CHAR_SCORES[char]
-            else:
-                raise Exception(f"Unknown char {char}")
-    return score
-
-
-def puzzle2(data) -> int:
-    return 0
+                stack.pop()
+        while stack:
+            char = stack.pop()
+            assert char in OPEN_CHARS
+            score *= 5
+            score += CHAR_SCORES2[MATCH_OPEN_CLOSE[char]]
+        all_scores.append(score)
+    all_scores.sort()
+    logging.debug("all scores: %r", all_scores)
+    middle = len(all_scores) // 2
+    return all_scores[middle]
 
 
 def main(argv=None):
@@ -64,9 +93,9 @@ def main(argv=None):
     init_logging(args.debug)
 
     data = load_input(args.input)
-    answer = puzzle1(data)
+    answer, incomplete = puzzle1(data)
     logging.info('Puzzle 1: %d', answer)
-    answer = puzzle2(data)
+    answer = puzzle2(incomplete)
     logging.info('Puzzle 2: %d', answer)
 
 
