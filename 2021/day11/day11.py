@@ -68,8 +68,15 @@ def puzzle1(energy: list[list[int]]) -> int:
     return flash_count
 
 
-def puzzle2(data) -> int:
-    return 0
+def puzzle2(energy: list[list[int]]) -> int:
+    for step in range(101, 1000):
+        logging.debug("----- Stepping Energy -----")
+        flash_count = step_energy(energy)
+        logging.debug("Step %d flash count: %d", step, flash_count)
+        if flash_count == 100:
+            logging.info("ALL FLASHED at Step %d", step)
+            return step
+    return -1
 
 
 def main(argv=None):
