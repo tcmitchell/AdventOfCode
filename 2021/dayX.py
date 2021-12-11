@@ -1,16 +1,15 @@
 from __future__ import annotations
 import argparse
 import logging
-import sys
 from typing import TextIO
 
 
-def parse_args(args):
+def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'),
                         metavar="PUZZLE_INPUT")
     parser.add_argument('-d', '--debug', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     return args
 
 
@@ -35,9 +34,7 @@ def puzzle2(data) -> int:
     return 0
 
 
-def main(argv):
-    if not argv:
-        argv = sys.argv
+def main(argv=None):
     args = parse_args(argv)
 
     # Init logging
@@ -51,4 +48,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
