@@ -50,8 +50,40 @@ def puzzle1(data: list[list[str]]) -> int:
     return len(complete_paths)
 
 
+def has_repeating_lower(path: list[str]):
+    # skip 'start'
+    for i in range(1, len(path)):
+        node = path[i]
+        if not node.islower():
+            continue
+        if node in path[i+1:]:
+            return True
+    return False
+
+
 def puzzle2(data: list[list[str]]) -> int:
-    return 0
+    graph: dict[str, list[str]] = defaultdict(list)
+    for pair in data:
+        graph[pair[0]].append(pair[1])
+        graph[pair[1]].append(pair[0])
+    complete_paths = []
+    pathq = [['start']]
+    while pathq:
+        path = pathq.pop(0)
+        neighbors = graph[path[-1]]
+        for node in neighbors:
+            if node == 'start':
+                continue
+            if node.islower() and has_repeating_lower(path) and node in path:
+                # only one lowercase node can repeat
+                continue
+            new_path = path.copy()
+            new_path.append(node)
+            if node == 'end':
+                complete_paths.append(new_path)
+            else:
+                pathq.append(new_path)
+    return len(complete_paths)
 
 
 def main(argv=None):
