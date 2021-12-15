@@ -2,6 +2,8 @@ from __future__ import annotations
 import argparse
 import logging
 import math
+from collections import defaultdict
+from copy import deepcopy
 from typing import TextIO
 
 
@@ -24,7 +26,8 @@ def init_logging(debug=False):
 
 
 def load_input(fp: TextIO):
-    return [line.strip() for line in fp.readlines()]
+    return [[int(x) for x in list(line)]
+            for line in [line.strip() for line in fp]]
 
 
 def neighbors4(grid, x, y) -> list[tuple[int, int]]:
@@ -52,6 +55,8 @@ def dijkstra(graph, start_x, start_y, end_x, end_y) -> int:
     dist[(start_x, start_y)] = 0
 
     while frontier:
+        if len(frontier) % 100 == 0:
+            logging.debug("Frontier size: %d", len(frontier))
         # Get node with lowest cost
         u = None
         min_dist = math.inf
@@ -60,10 +65,11 @@ def dijkstra(graph, start_x, start_y, end_x, end_y) -> int:
                 u = v
                 min_dist = dist[v]
         frontier.remove(u)
-        # if u == (end_x, end_y):
-        #     return dist[u]
+        if u == (end_x, end_y):
+            return dist[u]
         for n_x, n_y in neighbors4(graph, u[0], u[1]):
-            alt = dist[u] + int(graph[n_y][n_x])
+            # alt = dist[u] + int(graph[n_y][n_x])
+            alt = dist[u] + graph[n_y][n_x]
             if alt < dist[(n_x, n_y)]:
                 dist[(n_x, n_y)] = alt
                 prev[(n_x, n_y)] = u
@@ -73,12 +79,96 @@ def dijkstra(graph, start_x, start_y, end_x, end_y) -> int:
 def puzzle1(data) -> int:
     start = 0, 0
     end = len(data[0]) - 1, len(data) - 1
+    logging.debug("Starting search to %r", end)
     risk = dijkstra(data, start[0], start[1], end[0], end[1])
     return risk
 
 
+def increment_grid(grid: list[list[int]]):
+    for y in range(len(grid)):
+        for x in range(len(grid[0])):
+            grid[y][x] += 1
+            if grid[y][x] > 9:
+                grid[y][x] = 1
+    return grid
+
+
+def make5by5(grid: list[list[int]]):
+    result = deepcopy(grid)
+    orig_height = len(grid)
+    orig_width = len(grid[0])
+    for i in range(4):
+        grid = increment_grid(grid)
+        for y in range(len(result)):
+            result[y].extend(grid[y])
+    # Now extend vertically
+    for i in range(4):
+        # Copy a new set of rows in, offsetting by the original grid
+        grid = increment_grid(grid)
+        for y in range(orig_height):
+            result.append(result[i * orig_height + y][orig_width:]
+                          + grid[y])
+    return result
+
+
+def infinity():
+    return math.inf
+
+
+def reconstruct_path(came_from, current):
+    total_path = [current]
+    while current in came_from.keys():
+        current = came_from[current]
+        total_path.insert(0, current)
+    return total_path
+
+
+def A_star(grid, start: tuple[int, int], goal: tuple[int, int], h) -> int:
+    open_set = {start}
+    came_from = {}
+    g_score = defaultdict(infinity)
+    g_score[start] = 0
+    f_score = defaultdict(infinity)
+    f_score[start] = h(start)
+    while open_set:
+        #  current := the node in openSet having the lowest fScore[] value
+        current = None
+        current_score = math.inf
+        for v in open_set:
+            if f_score[v] < current_score:
+                current = v
+                current_score = f_score[v]
+        if current == goal:
+            # return reconstruct_path(came_from, current)
+            # We just want the score of the path to the goal
+            return int(current_score)
+        open_set.remove(current)
+        for neighbor in neighbors4(grid, current[0], current[1]):
+            tentative_g_score = g_score[current] + grid[neighbor[0]][neighbor[1]]
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = tentative_g_score + h(neighbor)
+                if neighbor not in open_set:
+                    open_set.add(neighbor)
+    raise Exception("Open set is empty but goal was never reached")
+
+
 def puzzle2(data) -> int:
-    return 0
+    grid = make5by5(data)
+    # grid = data
+    # for y in range(len(grid)):
+    #     print(''.join([str(c) for c in grid[y]]))
+    start = 0, 0
+    end = len(grid[0]) - 1, len(grid) - 1
+
+    # A-star heuristic function
+    def h(n: tuple[int, int]) -> int:
+        return end[0] - n[0] + end[1] - n[1]
+
+    logging.debug("Starting search to %r", end)
+    risk = A_star(grid, start, end, h)
+    return risk
 
 
 def main(argv=None):
