@@ -1,14 +1,16 @@
 from __future__ import annotations
 import argparse
 import logging
+import math
 from typing import TextIO, Union
 
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'),
-                        metavar="PUZZLE_INPUT")
+                        metavar="PUZZLE_INPUT", nargs='?')
     parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-p', '--packet')
     args = parser.parse_args(args)
     return args
 
@@ -58,6 +60,9 @@ class Literal:
     def sum_versions(self) -> int:
         return self.version
 
+    def eval(self) -> int:
+        return self.value
+
 
 class Operator:
 
@@ -88,6 +93,31 @@ class Operator:
     def sum_versions(self) -> int:
         return self.version + sum([child.sum_versions() for child in self.children])
 
+    SUM = 0
+    PRODUCT = 1
+    MINIMUM = 2
+    MAXIMUM = 3
+    GREATER_THAN = 5
+    LESS_THAN = 6
+    EQUAL_TO = 7
+
+    def eval(self) -> int:
+        child_values = [child.eval() for child in self.children]
+        if self.op_type == self.SUM:
+            return sum(child_values)
+        elif self.op_type == self.PRODUCT:
+            return math.prod(child_values)
+        elif self.op_type == self.MINIMUM:
+            return min(child_values)
+        elif self.op_type == self.MAXIMUM:
+            return max(child_values)
+        elif self.op_type == self.GREATER_THAN:
+            return int(child_values[0] > child_values[1])
+        elif self.op_type == self.LESS_THAN:
+            return int(child_values[0] < child_values[1])
+        elif self.op_type == self.EQUAL_TO:
+            return int(child_values[0] == child_values[1])
+
 
 TYPE_LITERAL = 4
 
@@ -117,8 +147,10 @@ def puzzle1(packet: str) -> int:
     return thing.sum_versions()
 
 
-def puzzle2(data) -> int:
-    return 0
+def puzzle2(packet: str) -> int:
+    packet = hex2bin(packet)
+    _, thing = parse_packet(packet)
+    return thing.eval()
 
 
 def main(argv=None):
@@ -127,7 +159,10 @@ def main(argv=None):
     # Init logging
     init_logging(args.debug)
 
-    data = load_input(args.input)
+    if args.input:
+        data = load_input(args.input)
+    else:
+        data = args.packet
     answer = puzzle1(data)
     logging.info('Puzzle 1: %d', answer)
     answer = puzzle2(data)
