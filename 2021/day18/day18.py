@@ -1,6 +1,8 @@
 from __future__ import annotations
 import argparse
+import itertools
 import logging
+from copy import deepcopy
 from typing import TextIO
 
 from node import Pair, Node
@@ -36,8 +38,17 @@ def puzzle1(data: list[Node]) -> int:
     return start.magnitude()
 
 
-def puzzle2(data) -> int:
-    return 0
+def puzzle2(data: list[Node]) -> int:
+    all_pairs = list(itertools.permutations(data, 2))
+    max_magnitude = 0
+    for pair in all_pairs:
+        p1 = deepcopy(pair[0])
+        p2 = deepcopy(pair[1])
+        mag = p1.add(p2).magnitude()
+        if mag > max_magnitude:
+            logging.debug("New max: %d", mag)
+            max_magnitude = mag
+    return max_magnitude
 
 
 def main(argv=None):
@@ -47,9 +58,10 @@ def main(argv=None):
     init_logging(args.debug)
 
     data = load_input(args.input)
+    data2 = deepcopy(data)
     answer = puzzle1(data)
     logging.info('Puzzle 1: %d', answer)
-    answer = puzzle2(data)
+    answer = puzzle2(data2)
     logging.info('Puzzle 2: %d', answer)
 
 
