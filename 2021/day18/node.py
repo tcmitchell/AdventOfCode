@@ -19,11 +19,11 @@ class Node:
         return self.left.split() or self.right.split()
 
     def reduce(self):
-        logging.warning("Starting: %s", self)
+        logging.debug("Starting: %s", self)
         while self.explode() or self.split():
-            logging.warning("After: %s", self)
+            logging.debug("After: %s", self)
             pass
-        logging.warning("Finished: %s", self)
+        logging.debug("Finished: %s", self)
 
     def all_literals(self) -> list[Literal]:
         return []
