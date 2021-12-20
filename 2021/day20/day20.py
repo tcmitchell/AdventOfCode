@@ -100,7 +100,9 @@ def puzzle1(iea: str, image: Image) -> int:
 
 
 def puzzle2(iea, image) -> int:
-    return 0
+    for i in range(50):
+        image = image.enhance(iea)
+    return image.lit_count()
 
 
 def main(argv=None):
