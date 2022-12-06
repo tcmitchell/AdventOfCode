@@ -42,9 +42,9 @@ def main(argv=None):
 
     data = load_input(args.input)
     answer = puzzle1(data)
-    logging.info('Puzzle 1: %d', answer)
+    logging.info('Puzzle 1: %r', answer)
     answer = puzzle2(data)
-    logging.info('Puzzle 2: %d', answer)
+    logging.info('Puzzle 2: %r', answer)
 
 
 if __name__ == '__main__':
