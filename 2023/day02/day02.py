@@ -41,7 +41,7 @@ BLUE_CUBES_RE = re.compile(r"(\d+) blue")
 
 def parse_cubes_max(line: str) -> tuple[int, int, int]:
     games = line.split(':')[1]
-    print(games)
+    # print(games)
     red = max([int(x) for x in (RED_CUBES_RE.findall(games))])
     green = max([int(x) for x in (GREEN_CUBES_RE.findall(games))])
     blue = max([int(x) for x in (BLUE_CUBES_RE.findall(games))])
@@ -52,7 +52,7 @@ def puzzle1(data) -> int:
     for game in data:
         # extract game id
         game_id = parse_id(game)
-        print(game_id)
+        # print(game_id)
         r, g, b = parse_cubes_max(game)
         if r > 12 or g > 13 or b > 14:
             continue
@@ -61,7 +61,12 @@ def puzzle1(data) -> int:
 
 
 def puzzle2(data) -> int:
-    return 0
+    total_power = 0
+    for game in data:
+        r, g, b = parse_cubes_max(game)
+        power = r * g * b
+        total_power += power
+    return total_power
 
 
 def main(argv=None):
