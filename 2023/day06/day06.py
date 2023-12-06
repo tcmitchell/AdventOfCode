@@ -75,7 +75,13 @@ def puzzle1(data) -> int:
 
 
 def puzzle2(data) -> int:
-    return 0
+    t = int("".join([str(x[0]) for x in data]))
+    d = int("".join([str(x[1]) for x in data]))
+    left = binary_search_leftmost(t, d)
+    right = binary_search_rightmost(t, d)
+    count = right - left + 1
+    logging.debug("%d %d: left = %d; right = %d; count = %d", t, d, left, right, count)
+    return count
 
 
 def main(argv=None):
