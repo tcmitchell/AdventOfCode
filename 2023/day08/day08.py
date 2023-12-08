@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import logging
+import math
 import re
 from typing import TextIO
 
@@ -44,6 +45,7 @@ def turns_to_indices(turns: str) -> list[int]:
     turns = turns.replace('R', '1')
     return [int(t) for t in turns]
 
+
 def puzzle1(data: tuple[str, dict[str, list[str]]]) -> int:
     turns, nodes = data
     turn = itertools.cycle(turns_to_indices(turns))
@@ -55,9 +57,23 @@ def puzzle1(data: tuple[str, dict[str, list[str]]]) -> int:
         steps += 1
     return steps
 
-
 def puzzle2(data) -> int:
-    return 0
+    turns, all_nodes = data
+    # Find all start nodes
+    start_nodes = [n for n in all_nodes.keys() if n.endswith('A')]
+    # Compute steps for each node to get to an end node, then
+    # use least common multiple to determine the total steps.
+    # Iterating to the end one by one takes too long
+    node_steps = []
+    for node in start_nodes:
+        steps = 0
+        turn = itertools.cycle(turns_to_indices(turns))
+        while not node.endswith('Z'):
+            node = all_nodes[node][next(turn)]
+            steps += 1
+        node_steps.append(steps)
+    logging.debug("%r", node_steps)
+    return math.lcm(*node_steps)
 
 
 def main(argv=None):
