@@ -3,6 +3,7 @@ import argparse
 import logging
 import math
 import re
+from itertools import islice
 from typing import TextIO, Optional
 
 
@@ -30,12 +31,31 @@ class AlmanacMapEntry:
         self.dst_start = dst_start
         self.src_start = src_start
         self.range_len = range_len
+        # computed for convenience
+        self.src_end = self.src_start + self.range_len
+        self.offset = self.dst_start - self.src_start
 
     def __contains__(self, item: int):
         return self.src_start <= item < self.src_start + self.range_len
 
     def map(self, item: int) -> int:
         return item - self.src_start + self.dst_start
+
+    def map_ranges(self, seed_ranges: list[SeedRange]) -> tuple[list[SeedRange], list[SeedRange]]:
+        mapped = []
+        unmapped = []
+        for sr in seed_ranges:
+            left = (sr.lo, min(sr.hi, self.src_start))
+            mid = (max(sr.lo, self.src_start), min(self.src_end, sr.hi))
+            right = (max(self.src_end, sr.lo), sr.hi)
+            logging.debug("left: %r", left)
+            if left[1] > left[0]:
+                unmapped.append(SeedRange(*left))
+            if mid[1] > mid[0]:
+                mapped.append(SeedRange(mid[0] + self.offset, mid[1] + self.offset))
+            if right[1] > right[0]:
+                unmapped.append(SeedRange(*right))
+        return mapped, unmapped
 
 
 class AlmanacMap:
@@ -54,6 +74,29 @@ class AlmanacMap:
                 return entry.map(value)
         # No mapping for value, so return the value per the rules
         return value
+
+    def lookup_ranges(self, seed_ranges: list[SeedRange]) -> list[SeedRange]:
+        mapped = []
+        unmapped = seed_ranges
+        for entry in self.entries:
+            emapped, eunmapped = entry.map_ranges(unmapped)
+            if emapped:
+                mapped.extend(emapped)
+            unmapped = eunmapped
+        # Anything that is unmapped passes through unchanged
+        mapped.extend(unmapped)
+        return mapped
+
+
+
+class SeedRange:
+
+    def __init__(self, lo: int, hi: int):
+        self.lo = lo
+        self.hi = hi
+
+    def __repr__(self):
+        return f"SeedRange<lo:{self.lo},hi:{self.hi}>"
 
 
 SEEDS_RE = re.compile(r"seeds:([\s\d]*)")
@@ -108,8 +151,36 @@ def puzzle1(data) -> int:
     return min_location
 
 
+def make_seed_ranges(seeds: list[int]) -> list[SeedRange]:
+    result = []
+    iterator = iter(seeds)
+    # while chunk := list(islice(iterator, 2)):
+    while chunk := tuple(islice(iterator, 2)):
+        lo, size = chunk
+        result.append(SeedRange(lo, lo + size))
+    return result
+
+
+def find_locations(seeds: SeedRange, maps: dict[str, AlmanacMap]):
+    entry_type = 'seed'
+    entry_values = [seeds]
+    while entry_type != 'location':
+        logging.debug("Mapping %s %r", entry_type, entry_values)
+        map = maps[entry_type]
+        next_value = map.lookup_ranges(entry_values)
+        logging.debug("%s %r -> %s %r", entry_type, entry_values, map.destination, next_value)
+        entry_type, entry_values = map.destination, next_value
+    return entry_values
+
+
 def puzzle2(data) -> int:
-    return 0
+    seeds, maps = data
+    seed_ranges = make_seed_ranges(seeds)
+    map_lookup = {map.source: map for map in maps}
+    locations = []
+    for seed_range in seed_ranges:
+        locations.extend(find_locations(seed_range, map_lookup))
+    return min([sr.lo for sr in locations])
 
 
 def main(argv=None):
