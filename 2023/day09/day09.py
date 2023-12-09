@@ -53,19 +53,37 @@ def puzzle1(data) -> int:
         while not all_zeros(s):
             stack.append(s[-1])
             s = compute_differences(s)
-        logging.debug("Stack: %r", stack)
+        # logging.debug("Stack: %r", stack)
         # Now add
         a = 0
         while stack:
             a += stack.pop(0)
         total += a
-        logging.debug("Next number: %r", a)
+        # logging.debug("Next number: %r", a)
 
     return total
 
 
 def puzzle2(data) -> int:
-    return 0
+    total = 0
+    for seq in data:
+        s = seq
+        stack = []
+        while not all_zeros(s):
+            stack.append(s[0])
+            s = compute_differences(s)
+        logging.debug("Stack: %r", stack)
+        # Now add
+        a = 0
+        while stack:
+            x = stack.pop()
+            logging.debug("%d - %d = %d", a, x, a - x)
+            a = x - a
+        total += a
+        logging.debug("Previous number: %r", a)
+        logging.debug("--------")
+
+    return total
 
 
 def main(argv=None):
