@@ -5,6 +5,8 @@ import typing
 from enum import Enum
 from typing import TextIO
 
+from shapely import Polygon, Point
+
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
@@ -137,23 +139,40 @@ def move(sketch: Map, pos: Position) -> Position:
                     return Position(new_pos.r, new_pos.c, Direction.SOUTH)
 
 
-def puzzle1(sketch: list[str]) -> int:
+def puzzle1(sketch: Map) -> tuple[int, list[list[str]], list[Position]]:
     loc = find_start(sketch)
     logging.debug("Start point = %r", loc)
     pos = find_start_position(sketch, loc)
     logging.debug("Start = %r", pos)
+    sketch2 = [[' '] * len(r) for r in sketch]
+    coords = [pos]
     moves = 1
     pos = move(sketch, pos)
+    coords.append(pos)
     logging.debug("Postion = %r", pos)
+    sketch2[pos.r][pos.c] = sketch[pos.r][pos.c]
     while sketch[pos.r][pos.c] != 'S':
         pos = move(sketch, pos)
+        coords.append(pos)
         logging.debug("Postion = %r", pos)
+        sketch2[pos.r][pos.c] = sketch[pos.r][pos.c]
         moves += 1
-    return moves // 2
+    return moves // 2, sketch2, coords
 
 
-def puzzle2(data) -> int:
-    return 0
+# 435
+def puzzle2(data: list[list[str]], coords: list[Position]) -> int:
+    for r in data:
+        print("".join(r))
+    poly = Polygon([(p.r, p.c) for p in coords])
+    contained = 0
+    logging.debug("Starting contained search")
+    for row in range(len(data)):
+        for col in range(len(data[row])):
+            # if cell is not part of main loop
+            if data[row][col] == ' ':
+                contained += poly.contains(Point(row, col))
+    return contained
 
 
 def main(argv=None):
@@ -163,9 +182,9 @@ def main(argv=None):
     init_logging(args.debug)
 
     data = load_input(args.input)
-    answer = puzzle1(data)
+    answer, sketch2, coords = puzzle1(data)
     logging.info('Puzzle 1: %r', answer)
-    answer = puzzle2(data)
+    answer = puzzle2(sketch2, coords)
     logging.info('Puzzle 2: %r', answer)
 
 
