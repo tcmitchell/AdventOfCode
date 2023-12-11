@@ -28,11 +28,16 @@ def load_input(fp: TextIO) -> list[list[str]]:
 
 
 def expand_rows(data: list[list[str]]) -> None:
-    empty_rows = [i for i, r in enumerate(data) if '#' not in r]
+    empty_rows = find_empty_rows(data)
     # Reverse so the rows don't shift out from underneath us
     for i in reversed(empty_rows):
         logging.debug("Expanding row %d", i)
         data.insert(i, data[i].copy())
+
+
+def find_empty_rows(data):
+    empty_rows = [i for i, r in enumerate(data) if '#' not in r]
+    return empty_rows
 
 
 def galaxy_in_column(data: list[list[str]], c: int) -> bool:
@@ -48,13 +53,18 @@ def insert_empty_column(data: list[list[str]], c: int) -> None:
 
 
 def expand_columns(data: list[list[str]]) -> None:
+    empty_columns = find_empty_columns(data)
+    for c in reversed(empty_columns):
+        logging.debug("Expanding column %d", c)
+        insert_empty_column(data, c)
+
+
+def find_empty_columns(data):
     empty_columns = []
     for c in range(len(data[0])):
         if not galaxy_in_column(data, c):
             empty_columns.append(c)
-    for c in reversed(empty_columns):
-        logging.debug("Expanding column %d", c)
-        insert_empty_column(data, c)
+    return empty_columns
 
 
 def galaxy_locations(data: list[list[str]]) -> list[tuple[int, int]]:
@@ -71,11 +81,32 @@ def taxi_distance(g1: tuple[int, int], g2: tuple[int, int]) -> int:
     return abs(g1[0] - g2[0]) + abs(g1[1] - g2[1])
 
 
-def puzzle1(data: list[list[str]]) -> int:
+def taxi_distance2(g1: tuple[int, int], g2: tuple[int, int],
+                   empty_rows: list[int], empty_columns: list[int],
+                   expansion_factor: int) -> int:
+    r1, r2 = sorted((g1[0], g2[0]))
+    distance = 0
+    for r in range(r1, r2):
+        if r in empty_rows:
+            distance += expansion_factor
+        else:
+            distance += 1
+    c1, c2 = sorted((g1[1], g2[1]))
+    for c in range(c1, c2):
+        if c in empty_columns:
+            distance += expansion_factor
+        else:
+            distance += 1
+    return distance
+
+
+# input1.txt: 374
+# input.txt: 9686930
+def puzzle1_orig(data: list[list[str]]) -> int:
     expand_rows(data)
     expand_columns(data)
-    for row in data:
-        logging.debug("".join(row))
+    # for row in data:
+    #     logging.debug("".join(row))
     galaxies = galaxy_locations(data)
     for galaxy in galaxies:
         logging.debug("Galaxy %r", galaxy)
@@ -86,8 +117,23 @@ def puzzle1(data: list[list[str]]) -> int:
     return total_distance
 
 
+def sum_distances(data: list[list[str]], expansion_factor: int) -> int:
+    empty_rows = find_empty_rows(data)
+    empty_columns = find_empty_columns(data)
+    galaxies = galaxy_locations(data)
+    total_distance = 0
+    for pair in combinations(galaxies, 2):
+        # logging.debug("Pair %r", pair)
+        total_distance += taxi_distance2(pair[0], pair[1], empty_rows, empty_columns, expansion_factor)
+    return total_distance
+
+
+def puzzle1(data: list[list[str]]) -> int:
+    return sum_distances(data, 2)
+
+
 def puzzle2(data) -> int:
-    return 0
+    return sum_distances(data, 1000000)
 
 
 def main(argv=None):
