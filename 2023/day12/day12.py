@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+import functools
 import itertools
 import logging
 import re
@@ -73,8 +74,46 @@ def puzzle1(data) -> int:
     return total_ways
 
 
+@functools.cache
+def num_valid_arrangements(springs: str, clues: tuple[int, ...], run_size: int = 0) -> int:
+    # Thank you https://www.reddit.com/r/adventofcode/comments/18ghle1/2023_day_12_part_2_python_i_love_you_python/
+    # print(springs, clues, run_size)
+    if not springs:
+        if ((len(clues) == 1 and clues[0] == run_size)
+                or (len(clues) == 0 and run_size == 0)):
+            return 1
+        return 0
+    spring = springs[0]
+    springs = springs[1:]
+    clue, *new_clues = clues or [0]
+    new_clues = tuple(new_clues)
+    if spring == '?':
+        return (num_valid_arrangements('#'+springs, clues, run_size) +
+                num_valid_arrangements('.'+springs, clues, run_size))
+    elif spring == '#':
+        if run_size > clue:
+            return 0
+        return num_valid_arrangements(springs, clues, run_size + 1)
+    elif spring == '.':
+        if run_size != 0 and run_size != clue:
+            return 0
+        return num_valid_arrangements(springs, new_clues if run_size else clues, 0)
+    else:
+        raise ValueError("Spring not one of #.?")
+
+
+def unfold(seq: str, score: tuple[int, ...]) -> tuple[str, tuple[int, ...]]:
+    return '?'.join([seq] * 5), score * 5
+
+
 def puzzle2(data) -> int:
-    return 0
+    total_ways = 0
+    for seq, score in data:
+        useq, uscore = unfold(seq, score)
+        ways = num_valid_arrangements(useq, uscore)
+        logging.debug("%s %r  - %d arrangements", seq, score, ways)
+        total_ways += ways
+    return total_ways
 
 
 def main(argv=None):
