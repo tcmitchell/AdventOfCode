@@ -53,8 +53,22 @@ def puzzle1(data) -> int:
     return len(safe)
 
 
+def problem_damper(report: list[int]) -> bool:
+    for i in range(len(report)):
+        if is_safe(report[:i] + report[i + 1:]):
+            return True
+    return False
+
+
 def puzzle2(data) -> int:
-    return 0
+    safe = []
+    for report in data:
+        if is_safe(report):
+            safe.append(report)
+            continue
+        if problem_damper(report):
+            safe.append(report)
+    return len(safe)
 
 
 def main(argv=None):
