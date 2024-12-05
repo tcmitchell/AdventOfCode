@@ -4,6 +4,7 @@ import logging
 import math
 import re
 from collections import defaultdict
+from functools import cmp_to_key
 from typing import TextIO
 
 
@@ -67,8 +68,29 @@ def puzzle1(data) -> int:
     return total
 
 
+def order_update(rules: list[tuple[int, int]], update: list[int]) -> list[int]:
+    def rule_cmp(a, b):
+        if (a,b) in rules:
+            return -1
+        elif (b,a) in rules:
+            return 1
+        else:
+            raise(ValueError(f"No rule for ({a}, {b})"))
+    return sorted(update, key=cmp_to_key(rule_cmp))
+
 def puzzle2(data) -> int:
-    return 0
+    logger = logging.getLogger('puzzle1')
+    rules, updates = data
+    total = 0
+    for update in updates:
+        ruleset = []
+        for page in update:
+            ruleset.extend(rules[page])
+        if not is_correct_order(ruleset, update):
+            logger.debug("Yes: %r", update)
+            update = order_update(ruleset, update)
+            total += update[math.floor(len(update) / 2)]
+    return total
 
 
 def main(argv=None):
