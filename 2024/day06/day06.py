@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+import copy
 import logging
 from typing import TextIO, Optional
 
@@ -42,6 +43,7 @@ def is_blocked(data: list[list[str]], pos: tuple[int, int]) -> bool:
         return data[r][c] == '#'
     except IndexError:
         return False
+
 
 def move_and_mark(data: list[list[str]], pos: tuple[int, int]) -> tuple[int, int]:
     """Move the guard and mark the previous position."""
@@ -114,9 +116,91 @@ def puzzle1(data: list[list[str]]) -> int:
     return visited
 
 
-def puzzle2(data) -> int:
-    return 0
+def is_cycle(data: list[list[str]], pos: tuple[int, int]) -> bool:
+    data[pos[0]][pos[1]] = '#'
+    r, c = find_guard(data)
+    visited = {(r, c, data[r][c])}
+    while guard_in_room(data, (r, c)):
+        r, c = move_and_mark(data, (r, c))
+        try:
+            guard = data[r][c]
+        except IndexError:
+            return False
+        assert(guard in {'^', '>', 'v', '<'})
+        if (r, c, guard) in visited:
+            print("loop detected")
+            return True
+        visited.add((r, c, guard))
+    return False
 
+
+def puzzle2A(data: list[list[str]]) -> int:
+    logger = logging.getLogger('puzzle2')
+    save_data = copy.deepcopy(data)
+    guard_pos = find_guard(data)
+    initial_pos = guard_pos
+    t = 0
+    while guard_in_room(data, guard_pos):
+        guard_pos = move_and_mark(data, guard_pos)
+        t += 1
+    show_room(data, logger)
+    candidates = []
+    for r in range(len(data)):
+        for c in range(len(data[r])):
+            if data[r][c] == 'X' and (r, c) != initial_pos:
+                candidates.append((r, c))
+    logger.info("There are %d candidates", len(candidates))
+    cycles = 0
+    checked = 0
+    for candidate in candidates:
+        data = copy.deepcopy(save_data)
+        if is_cycle(data, candidate):
+            cycles += 1
+        checked += 1
+        if checked % 10 == 0:
+            logger.info("Checked %d candidates, have %d cycles", checked, cycles)
+    return cycles
+
+
+def find_looped_route(start_pos, next_row, next_col, grid):
+    row_count = len(grid)
+    col_count = len(grid[0])
+    curr_row, curr_col = start_pos
+    visited = set()
+
+    while True:
+        # Add coords to visited
+        visited.add((curr_row, curr_col, next_row, next_col))
+        # Bounds check (is guard gonna leave)
+        if curr_row + next_row < 0 or curr_row + next_row >= row_count or curr_col + next_col < 0 or curr_col + next_col >= col_count:
+            break
+        # Check for obstacle else move
+        if grid[curr_row + next_row][curr_col + next_col] == "#":
+            next_col, next_row = -next_row, next_col
+        else:
+            curr_row += next_row
+            curr_col += next_col
+        # Check if looped
+        if (curr_row, curr_col, next_row, next_col) in visited:
+            return True
+
+
+# Thanks to https://github.com/IchBinJade/advent-of-code-python/blob/main/2024%2Fday06.py
+def puzzle2(grid: list[list[str]]) -> int:
+    start_pos = find_guard(grid)
+    total = 0
+    for row in range(len(grid)):
+        for col in range(len(grid[0])):
+            if grid[row][col] != ".":
+                continue
+            grid[row][col] = "#"
+            if find_looped_route(start_pos, -1, 0, grid):
+                total += 1
+            grid[row][col] = "."
+    return total
+
+
+# puzzle 2: 1713 is too high
 
 def main(argv=None):
     args = parse_args(argv)
@@ -125,7 +209,7 @@ def main(argv=None):
     init_logging(args.debug)
 
     data = load_input(args.input)
-    answer = puzzle1(data)
+    answer = puzzle1(copy.deepcopy(data))
     logging.info('Puzzle 1: %r', answer)
     answer = puzzle2(data)
     logging.info('Puzzle 2: %r', answer)
