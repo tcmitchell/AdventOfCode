@@ -59,20 +59,61 @@ def checksum1(disk: list[str]) -> int:
         try:
             checksum += pos * int(disk[pos])
         except ValueError:
-            return checksum
+            continue
     return checksum
 
 
 def puzzle1(data: str) -> int:
     disk = input_to_disk(data)
-    print("".join(disk))
+    # print("".join(disk))
     disk = defrag1(disk)
-    print("".join(disk))
+    # print("".join(disk))
     return checksum1(disk)
 
 
+def rfind_file(disk: list[str], start: int) -> tuple[int, int]:
+    ptr = start
+    while disk[ptr] == ".":
+        ptr -= 1
+    file_id = disk[ptr]
+    file_size = 1
+    while disk[ptr] == file_id:
+        ptr -= 1
+        file_size += 1
+    return ptr + 1, file_size - 1
+
+
+def find_free_block(disk: list[str], start: int, size: int) -> int:
+    ptr = start
+    free_block = ["."] * size
+    while ptr < len(disk):
+        if disk[ptr: ptr + size ] == free_block:
+            return ptr
+        ptr += 1
+    return -1
+
+
+def defrag2(disk: list[str]) -> list[str]:
+    logger = logging.getLogger("puzzle2")
+    file_ptr = len(disk) - 1
+    while file_ptr > 0:
+        file_ptr, file_size = rfind_file(disk, file_ptr)
+        logger.debug("file_ptr = %d, file_size = %d (%s)", file_ptr, file_size, disk[file_ptr:file_ptr + file_size])
+        free_ptr = find_free_block(disk, disk.index("."), file_size)
+        if 0 <= free_ptr < file_ptr:
+            disk[free_ptr:free_ptr + file_size], disk[file_ptr: file_ptr + file_size] = disk[file_ptr: file_ptr + file_size], disk[free_ptr:free_ptr + file_size]
+            # print("".join(disk))
+        else:
+            # Skip this file
+            file_ptr -= 1
+    return disk
+
+
 def puzzle2(data) -> int:
-    return 0
+    disk = input_to_disk(data)
+    # print("".join(disk))
+    disk = defrag2(disk)
+    return checksum1(disk)
 
 
 def main(argv=None):
