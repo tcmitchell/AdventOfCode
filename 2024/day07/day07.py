@@ -32,13 +32,21 @@ def load_input(fp: TextIO):
 
 
 def is_valid1(total: int, numbers: list[int]) -> bool:
-    operators = list(itertools.product('*+', repeat=len(numbers) - 1))
+    operators = list(itertools.product(['*', '+'], repeat=len(numbers) - 1))
     for op_set in operators:
         answer = numbers[0]
         i = 1
         for op in op_set:
-            answer = eval(f"{answer} {op} {numbers[i]}")
+            match op:
+                case "*":
+                    answer = answer * numbers[i]
+                case "+":
+                    answer = answer + numbers[i]
+                case _:
+                    raise ValueError(f'invalid operator: {op}')
             i += 1
+            if answer > total:
+                break
         if answer == total:
             return True
     return False
@@ -53,8 +61,36 @@ def puzzle1(data: list[tuple[int, list[int]]]) -> int:
     return total
 
 
+def is_valid2(total: int, numbers: list[int]) -> bool:
+    operators = list(itertools.product(['*', '+', '||'], repeat=len(numbers) - 1))
+    for op_set in operators:
+        answer = numbers[0]
+        i = 1
+        for op in op_set:
+            match op:
+                case "*":
+                    answer = answer * numbers[i]
+                case "+":
+                    answer = answer + numbers[i]
+                case "||":
+                    answer = int(f"{answer}{numbers[i]}")
+                case _:
+                    raise ValueError(f'invalid operator: {op}')
+            i += 1
+            if answer > total:
+                break
+        if answer == total:
+            return True
+    return False
+
+
 def puzzle2(data) -> int:
-    return 0
+    total = 0
+    for entry in data:
+        if is_valid2(entry[0], entry[1]):
+            # print(entry)
+            total += entry[0]
+    return total
 
 
 def main(argv=None):
