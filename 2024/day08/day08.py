@@ -59,8 +59,43 @@ def puzzle1(data) -> int:
     return len(antinodes)
 
 
+def compute_antinodes2(grid: dict[tuple[int, int], list],
+                       a1: tuple[int, int], a2: tuple[int, int]
+                       ) -> set[tuple[int, int]]:
+    dr = a1[0] - a2[0]
+    dc = a1[1] - a2[1]
+    antinodes = set()
+    p1 = a1
+    while p1 in grid:
+        antinodes.add(p1)
+        p1 = (p1[0] - dr, p1[1] - dc)
+    p1 = a2
+    while p1 in grid:
+        antinodes.add(p1)
+        p1 = (p1[0] + dr, p1[1] + dc)
+    return antinodes
+
+
 def puzzle2(data) -> int:
-    return 0
+    logger = logging.getLogger('puzzle2')
+    grid = {}
+    antennas = defaultdict(list)
+
+    for r in range(len(data)):
+        for c in range(len(data[0])):
+            grid[(r, c)] = []
+            if data[r][c] != '.':
+                antennas[data[r][c]].append((r, c))
+    antinodes = {}
+    for k, v in antennas.items():
+        logger.info("%s: %r", k, list(itertools.combinations(v, 2)))
+        for a1, a2 in itertools.combinations(v, 2):
+            logger.info("antennas: %r, %r", a1, a2)
+            for antinode in compute_antinodes2(grid, a1, a2):
+                logger.info("antinode: %r", antinode)
+                if antinode in grid:
+                    antinodes[antinode] = 1
+    return len(antinodes)
 
 
 def main(argv=None):
