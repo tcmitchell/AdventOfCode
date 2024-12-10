@@ -29,20 +29,20 @@ def load_input(fp: TextIO):
     return data
 
 
-def find_path(grid, r, c, height) -> set[tuple[int, int]]:
+def find_path(grid, r, c, height) -> list[tuple[int, int]]:
     if (r, c) not in grid:
         # we've gone off the grid
-        return set()
+        return []
     if grid[(r, c)] != height + 1:
         # not a gentle rise
-        return set()
+        return []
     if grid[(r, c)] == 9:
         # we've reached a summit
         logging.info("Summit at (%d, %d)", r, c)
-        return {(r, c)}
-    result = set()
+        return [(r, c)]
+    result = list()
     for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-        result.update(find_path(grid, r + dr, c + dc, height + 1))
+        result.extend(find_path(grid, r + dr, c + dc, height + 1))
     return result
 
 
@@ -55,14 +55,25 @@ def puzzle1(data) -> int:
     for r in range(len(data)):
         for c in range(len(data[r])):
             if data[r][c] == 0:
-                summits = find_path(grid, r, c, -1)
+                summits = set(find_path(grid, r, c, -1))
                 logging.info("Summits for (%d, %d): %r", r, c, summits)
                 total += len(summits)
     return total
 
 
 def puzzle2(data) -> int:
-    return 0
+    grid = {}
+    for r in range(len(data)):
+        for c in range(len(data[r])):
+            grid[(r, c)] = data[r][c]
+    total = 0
+    for r in range(len(data)):
+        for c in range(len(data[r])):
+            if data[r][c] == 0:
+                trails = find_path(grid, r, c, -1)
+                logging.info("Trails for (%d, %d): %r", r, c, trails)
+                total += len(trails)
+    return total
 
 
 def main(argv=None):
